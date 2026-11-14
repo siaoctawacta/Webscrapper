@@ -2,6 +2,7 @@
  * Test-only fixtures for the collections module (imported by *.test.ts files only, never by app code).
  * Inserts search jobs/results directly and provides a fake provider for live-details tests.
  */
+import "server-only";
 import { emptyProgress, type SourceId } from "@/lib/domain";
 import { db } from "../db";
 import { searchJobs, searchResults, type NewSearchResult, type SearchJob, type SearchResult } from "../db/schema";
@@ -12,7 +13,10 @@ export { createTestUser, type TestUser } from "../../../tests/helpers/auth";
 export { resetDb } from "../../../tests/helpers/db";
 export { apiRequest, ctx } from "../../../tests/helpers/request";
 
-export async function insertJob(userId: string, opts: { provider?: SourceId; resultsPurgedAt?: Date | null } = {}): Promise<SearchJob> {
+export async function insertJob(
+  userId: string,
+  opts: { provider?: SourceId; resultsPurgedAt?: Date | null; resultsExpireAt?: Date | null } = {},
+): Promise<SearchJob> {
   const [job] = await db()
     .insert(searchJobs)
     .values({
@@ -25,6 +29,7 @@ export async function insertJob(userId: string, opts: { provider?: SourceId; res
       status: "completed",
       progress: emptyProgress(),
       resultsPurgedAt: opts.resultsPurgedAt ?? null,
+      resultsExpireAt: opts.resultsExpireAt ?? null,
     })
     .returning();
   return job!;
@@ -116,9 +121,14 @@ export const livePlace = (id: string, o: Partial<ProviderPlace> = {}): ProviderP
   ...o,
 });
 
-/** Fake Google provider: reports one billable usage event per id, optionally fails. */
-export function fakeProvider(places: ProviderPlace[], opts: { fail?: boolean } = {}) {
+/**
+ * Fake Google provider: reports one billable usage event per requested id (as the real adapter does per
+ * HTTP request) and silently omits ids it has no place for. `fail` makes every call throw after its first
+ * request; `failOnCall` (1-based) makes only that call throw; `hang` waits until the signal aborts.
+ */
+export function fakeProvider(places: ProviderPlace[], opts: { fail?: boolean; failOnCall?: number; hang?: boolean } = {}) {
   const calls: string[][] = [];
+  const signals: (AbortSignal | undefined)[] = [];
   const byId = new Map(places.map((p) => [p.sourceRecordId, p]));
   const provider: BusinessProvider = {
     id: "google_places",
@@ -129,11 +139,20 @@ export function fakeProvider(places: ProviderPlace[], opts: { fail?: boolean } =
     findPlace: async () => null,
     getDetails: async (ids, ctx) => {
       calls.push(ids);
+      signals.push(ctx?.signal);
+      const failing = opts.fail || opts.failOnCall === calls.length;
+      if (opts.hang) {
+        await new Promise<void>((_, reject) => {
+          const abort = () => reject(new ProviderError("The request was cancelled", "unavailable"));
+          if (ctx?.signal?.aborted) abort();
+          ctx?.signal?.addEventListener("abort", abort, { once: true });
+        });
+      }
       const out = new Map<string, ProviderPlace>();
       for (const id of ids) {
         const usage: UsageEvent = { operation: "place_details", requests: 1, costUsd: 0.02, billable: true };
         await ctx?.onUsage?.(usage);
-        if (opts.fail) throw new ProviderError("Google rejected the API key", "auth", 403);
+        if (failing) throw new ProviderError("Google rejected the API key", "auth", 403);
         const p = byId.get(id);
         if (p) out.set(id, p);
       }
@@ -141,5 +160,5 @@ export function fakeProvider(places: ProviderPlace[], opts: { fail?: boolean } =
     },
     estimate: () => ({ estimatedRequests: 0, maxRequests: 0, estimatedCostUsd: 0, freeMonthlyRequests: null, notes: [] }),
   };
-  return { provider, calls };
+  return { provider, calls, signals };
 }

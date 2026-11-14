@@ -18,26 +18,36 @@ export const DETAILS_BATCH_SIZE = 100;
  * only for what the user is looking at; callers that need more rows (exports) must not hydrate.
  */
 export const MAX_HYDRATED_ROWS = Math.max(...PAGE_SIZES);
+/** Give up on live details after this long so a slow provider never stalls the collection page. */
+export const LIVE_DETAILS_TIMEOUT_MS = 15_000;
 
 export type HydrateDeps = {
   getProvider?: (id: SourceId) => BusinessProvider;
   recordUsage?: (u: UsageEntry) => Promise<unknown>;
   /** Override MAX_HYDRATED_ROWS (tests). */
   maxRows?: number;
+  /** Override LIVE_DETAILS_TIMEOUT_MS (tests). */
+  timeoutMs?: number;
 };
 
-let warnedNotConfigured = false;
+const warnedNotConfigured = new Set<SourceId>();
 
 /**
  * Fill provider fields that the source policy forbids storing (restrictedFields) by fetching them
  * live from the provider, for display only. Records usage. Never throws: on failure rows are returned
  * unchanged (restricted fields stay null).
+ *
+ * - Only rows whose source policy supports live details are looked up, at most MAX_HYDRATED_ROWS.
+ * - Every restricted field of a row the provider returned is listed in `liveFields` (also when the
+ *   live value is empty), so the UI can tell "not stored" apart from "the provider has no value".
+ * - Rows the provider did not return (removed places) are left as stored.
+ * - Live values are never written to the database.
  */
 export async function hydrateRows(user: AppUser, rows: BusinessRow[], deps: HydrateDeps = {}): Promise<BusinessRow[]> {
   try {
     return await hydrate(user, rows, deps);
   } catch (e) {
-    console.error("[collections] live details failed; showing stored data only", e);
+    console.error("[collections] live details failed; showing stored data only:", e instanceof Error ? e.message : e);
     return rows;
   }
 }
@@ -66,15 +76,13 @@ async function hydrate(user: AppUser, rows: BusinessRow[], deps: HydrateDeps): P
     try {
       provider = getProvider(source);
     } catch (e) {
-      if (e instanceof HttpError) {
-        // Expected when the provider key is not configured: rows keep their restricted fields empty.
-        if (!warnedNotConfigured) {
-          warnedNotConfigured = true;
-          console.warn(`[collections] live details unavailable for ${source}: ${e.message}`);
-        }
-        continue;
+      if (!(e instanceof HttpError)) throw e;
+      // Expected when the provider key is not configured: rows keep their restricted fields empty.
+      if (!warnedNotConfigured.has(source)) {
+        warnedNotConfigured.add(source);
+        console.warn(`[collections] live details unavailable for ${source}: ${e.message}`);
       }
-      throw e;
+      continue;
     }
 
     const usageWrites: Promise<unknown>[] = [];
@@ -92,16 +100,20 @@ async function hydrate(user: AppUser, rows: BusinessRow[], deps: HydrateDeps): P
     };
 
     const ids = [...new Set(indexes.map((i) => rows[i]!.sourceRecordId))];
-    const live = new Map<string, ProviderPlace>();
+    const signal = AbortSignal.timeout(deps.timeoutMs ?? LIVE_DETAILS_TIMEOUT_MS);
+    let live: Map<string, ProviderPlace>;
     try {
+      live = new Map();
       for (let start = 0; start < ids.length; start += DETAILS_BATCH_SIZE) {
-        const found = await provider.getDetails(ids.slice(start, start + DETAILS_BATCH_SIZE), { onUsage });
+        const found = await provider.getDetails(ids.slice(start, start + DETAILS_BATCH_SIZE), { onUsage, signal });
         for (const [id, place] of found) live.set(id, place);
       }
     } catch (e) {
-      // Key/billing/quota/outage: keep whatever loaded before the failure, leave the rest as stored.
-      console.error(`[collections] live details from ${source} failed:`, e instanceof Error ? e.message : e);
+      // Key/billing/quota/outage/timeout: this source's rows stay exactly as stored.
+      console.error(`[collections] live details from ${source} failed; showing stored data only:`, e instanceof Error ? e.message : e);
+      continue;
     } finally {
+      // Requests that were made are billed even when the batch failed, so always record them.
       await Promise.all(usageWrites);
     }
 

@@ -217,6 +217,18 @@ describe("adding search results", () => {
     const res = await addLeads(user, c.id, { jobId: job.id, query: {} });
     expect(res.status).toBe(409);
     expect(((await res.json()) as ApiError).error.message).toMatch(/expired/);
+
+    // Past the retention window but not purged yet: also refused.
+    const lapsed = await insertJob(user.id, { provider: "google_places", resultsExpireAt: new Date(Date.now() - 60_000) });
+    const [r] = await insertResults(lapsed, [googleSpec(1)]);
+    const res2 = await addLeads(user, c.id, { jobId: lapsed.id, resultIds: [r!.id] });
+    expect(res2.status).toBe(409);
+    expect(await db().select().from(businesses)).toHaveLength(0);
+
+    // Still inside the window: fine.
+    const fresh = await insertJob(user.id, { provider: "google_places", resultsExpireAt: new Date(Date.now() + 3600_000) });
+    const [r2] = await insertResults(fresh, [googleSpec(2)]);
+    expect(await (await addLeads(user, c.id, { jobId: fresh.id, resultIds: [r2!.id] })).json()).toEqual({ added: 1, skipped: 0 });
   });
 });
 
@@ -288,6 +300,33 @@ describe("source policy on save", () => {
       lng: 1.22,
       restrictedFields: [],
     });
+  });
+
+  it("re-saving a Google place refreshes our own website findings but never stores the restricted fields", async () => {
+    const user = await createTestUser();
+    const c = await newCollection(user);
+    const first = await insertJob(user.id, { provider: "google_places" });
+    const later = await insertJob(user.id, { provider: "google_places" });
+    const [g1] = await insertResults(first, [
+      googleSpec(1, { websiteStatus: "unknown", emails: [], primaryEmail: null, emailOrigin: null, emailStatus: "unknown", retrievedAt: new Date("2026-11-01T00:00:00Z") }),
+    ]);
+    const [g2] = await insertResults(later, [googleSpec(1, { websiteStatus: "unreachable", retrievedAt: new Date("2026-11-12T00:00:00Z") })]);
+    await addLeads(user, c.id, { jobId: first.id, resultIds: [g1!.id] });
+    expect(await (await addLeads(user, c.id, { jobId: later.id, resultIds: [g2!.id] })).json()).toEqual({ added: 0, skipped: 1 });
+
+    const rows = await db().select().from(businesses).where(eq(businesses.userId, user.id));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      websiteStatus: "unreachable",
+      primaryEmail: "contact@biz1.example",
+      emailStatus: "source_provided",
+      name: null,
+      phoneRaw: null,
+      websiteUrl: null,
+      mapsUrl: "https://maps.google.com/?cid=1",
+    });
+    expect(rows[0]!.retrievedAt.toISOString()).toBe("2026-11-12T00:00:00.000Z");
+    expect(rows[0]!.restrictedFields).toContain("business_name");
   });
 
   it("refreshes a stored record from a newer search but not from an older one", async () => {

@@ -236,10 +236,11 @@ describe("redirect re-validation (mocked transport + resolver, production rules)
   it.each(["http://169.254.169.254/latest/meta-data/", "http://127.0.0.1/", "http://[::1]/", "http://rebind.test/", "http://shop.test:8080/", "file:///etc/passwd"])(
     "refuses a redirect to %s",
     async (target) => {
-      const c = client({ "https://shop.test/": () => redirectTo(target) });
-      const e = await rejection(c.http.get(new URL("https://shop.test/"), base));
+      // Plain-HTTP start, so the HTTPS → HTTP rule is not what stops the hop.
+      const c = client({ "http://shop.test/": () => redirectTo(target) });
+      const e = await rejection(c.http.get(new URL("http://shop.test/"), base));
       expect(["blocked_address", "blocked_port", "invalid_url"]).toContain(e.kind);
-      expect(c.calls).toEqual(["https://shop.test/"]);
+      expect(c.calls).toEqual(["http://shop.test/"]);
     },
   );
 

@@ -23,7 +23,7 @@ export {
   type LeadsDeps,
 } from "./leads";
 export { bulkInputFromBody, bulkLeads, type BulkActionInput, type BulkResult, type BulkSelector } from "./bulk";
-export { hydrateRows, DETAILS_BATCH_SIZE, MAX_HYDRATED_ROWS, type HydrateDeps } from "./hydrate";
+export { hydrateRows, DETAILS_BATCH_SIZE, LIVE_DETAILS_TIMEOUT_MS, MAX_HYDRATED_ROWS, type HydrateDeps } from "./hydrate";
 export { upsertBusinessFromResult, upsertBusinessesFromResults, deleteOrphanBusinesses, businessKey } from "./persist";
 export { businessValuesFromResult } from "./policy-columns";
 export { normalizeTags, MAX_TAGS, MAX_TAG_LENGTH } from "./tags";

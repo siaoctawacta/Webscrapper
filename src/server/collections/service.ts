@@ -9,6 +9,7 @@ import { db, type DbOrTx } from "../db";
 import { buildFilterConditions, buildOrderBy, RESULTS_GRID } from "../db/list-sql";
 import { collections, leads, searchJobs, searchResults, type Collection, type SearchResult } from "../db/schema";
 import { HttpError, notFound } from "../errors";
+import { isUuid } from "../http";
 import { businessKey, deleteOrphanBusinesses, upsertBusinessesFromResults } from "./persist";
 import type { CreateCollectionInput, UpdateCollectionInput } from "./schemas";
 
@@ -207,12 +208,13 @@ export async function addToCollection(
   const result = await db().transaction(async (tx) => {
     const collection = await getOwnedCollection(user, collectionId, tx);
     const [job] = await tx
-      .select({ id: searchJobs.id, resultsPurgedAt: searchJobs.resultsPurgedAt })
+      .select({ id: searchJobs.id, resultsPurgedAt: searchJobs.resultsPurgedAt, resultsExpireAt: searchJobs.resultsExpireAt })
       .from(searchJobs)
       .where(and(eq(searchJobs.id, input.jobId), eq(searchJobs.userId, user.id)))
       .limit(1);
     if (!job) throw notFound("Search");
-    if (job.resultsPurgedAt) {
+    // Past the source's retention window the results may no longer be used, even before the purge job ran.
+    if (job.resultsPurgedAt || (job.resultsExpireAt && job.resultsExpireAt.getTime() <= Date.now())) {
       throw new HttpError("conflict", "The results of this search have expired and can no longer be saved. Run the search again to get fresh results.");
     }
 
@@ -226,7 +228,7 @@ export async function addToCollection(
         .orderBy(...buildOrderBy(query, RESULTS_GRID))
         .limit(MAX_BULK_ROWS);
     } else {
-      const ids = [...new Set("resultIds" in input ? input.resultIds : [])];
+      const ids = [...new Set(("resultIds" in input ? input.resultIds : []).filter(isUuid))];
       rows = ids.length
         ? await tx
             .select()

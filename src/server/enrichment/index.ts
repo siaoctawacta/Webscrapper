@@ -279,7 +279,8 @@ export async function enrichWebsite(url: string, opts: EnrichOptions = {}, deps:
       }
     }
   }
-  const copyrightYear = pages.map((p) => p.data.copyrightYear).find((y): y is number => y !== null);
+  const years = pages.map((p) => p.data.copyrightYear).filter((y): y is number => y !== null);
+  const copyrightYear = years.length > 0 ? Math.max(...years) : undefined;
 
   // 4. Mail-server check for the domains of the addresses we keep.
   const mx =

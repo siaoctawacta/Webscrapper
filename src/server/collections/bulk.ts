@@ -8,6 +8,7 @@ import { db } from "../db";
 import { buildFilterConditions, buildOrderBy, COLLECTION_GRID } from "../db/list-sql";
 import { businesses, leads } from "../db/schema";
 import { HttpError } from "../errors";
+import { isUuid } from "../http";
 import { CONTACT_STATUSES, tagsOrThrow } from "./leads";
 import { deleteOrphanBusinesses } from "./persist";
 import type { BulkAction, BulkBody } from "./schemas";
@@ -53,7 +54,8 @@ export function bulkInputFromBody(body: BulkBody): { selector: BulkSelector; act
 function selectorSql(user: AppUser, collectionId: string, selector: BulkSelector): SQL {
   const scope = and(eq(leads.collectionId, collectionId), eq(leads.userId, user.id))!;
   if ("leadIds" in selector) {
-    const ids = [...new Set(selector.leadIds)];
+    // Malformed ids can never match a lead; dropping them keeps the uuid[] cast from failing.
+    const ids = [...new Set(selector.leadIds.filter(isUuid))];
     return sql`select ${leads.id} from ${leads} where ${scope} and ${leads.id} = any(${sql.param(ids)}::uuid[])`;
   }
   const q = validateListQuery(selector.query, "collection");
@@ -73,10 +75,13 @@ const addTagsExpr = (add: string[]) => sql`array(
   limit ${MAX_TAGS}
 )`;
 
-/** Tags array expression without any of `remove` (compared case-insensitively). */
-const removeTagsExpr = (removeLower: string[]) => sql`array(
+/**
+ * Tags array expression without any of `remove`, compared case-insensitively. Both sides are lowered
+ * by Postgres so the comparison matches how add_tags de-duplicates, whatever the server's locale.
+ */
+const removeTagsExpr = (remove: string[]) => sql`array(
   select u.t from unnest(${leads.tags}) with ordinality as u(t, ord)
-  where lower(u.t) <> all(${sql.param(removeLower)}::text[])
+  where lower(u.t) <> all(array(select lower(r.t) from unnest(${sql.param(remove)}::text[]) as r(t)))
   order by u.ord
 )`;
 
@@ -96,7 +101,7 @@ export async function bulkLeads(
   // Validate inputs before opening the transaction.
   let tags: string[] = [];
   if (action.action === "add_tags" || action.action === "replace_tags") tags = tagsOrThrow(action.tags);
-  if (action.action === "remove_tags") tags = [...new Set(action.tags.map((t) => cleanTag(t).toLowerCase()).filter(Boolean))];
+  if (action.action === "remove_tags") tags = [...new Set(action.tags.map(cleanTag).filter(Boolean))];
   if ((action.action === "add_tags" || action.action === "remove_tags") && !tags.length) {
     throw new HttpError("validation_failed", "Enter at least one tag", [{ path: "tags", message: "Enter at least one tag" }]);
   }
