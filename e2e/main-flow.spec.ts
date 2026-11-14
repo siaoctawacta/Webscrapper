@@ -72,14 +72,16 @@ test("search → sort → filter → save → tag → proposal → export", asyn
   await expect(leadsTable.getByText("call this week").first()).toBeVisible();
 
   // Write a proposal for the first lead.
-  await leadsTable.getByRole("row").nth(1).getByRole("button", { name: /lead actions/i }).click();
+  await leadsTable.getByRole("row").nth(1).getByRole("button", { name: /actions for/i }).click();
   await page.getByRole("menuitem", { name: /write proposal/i }).click();
   const proposal = page.getByRole("dialog");
   await proposal.getByRole("button", { name: /generate|write/i }).first().click();
   await expect(proposal.getByRole("textbox").last()).not.toBeEmpty();
   await proposal.getByRole("button", { name: /mark as sent/i }).click();
-  await expect(page.getByText(/sent|saved/i).first()).toBeVisible();
-  await page.keyboard.press("Escape");
+  await page.getByRole("menuitem", { name: /on whatsapp/i }).click();
+  await expect(proposal).toBeHidden();
+  // Logging the proposal moves the lead to "Proposal sent".
+  await expect(leadsTable.getByRole("row").nth(1)).toContainText(/proposal sent/i);
 
   // Export the collection to Excel and check the file.
   await page.getByRole("button", { name: /^export$/i }).first().click();
@@ -88,10 +90,17 @@ test("search → sort → filter → save → tag → proposal → export", asyn
   const downloadPromise = page.waitForEvent("download");
   await exportDialog.getByRole("button", { name: /export \d+ rows/i }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
   const path = await download.path();
   const bytes = await readFile(path!);
   expect(bytes.subarray(0, 2).toString()).toBe("PK"); // XLSX is a zip
+
+  // Headless Chromium reports every download as "download", so check the server's file name directly
+  // with a fresh short-lived link.
+  const list = await (await page.request.get("/api/v1/exports")).json();
+  const fresh = await (await page.request.get(`/api/v1/exports/${list.exports[0].id}`)).json();
+  const file = await page.request.get(fresh.downloadUrl);
+  expect(file.status()).toBe(200);
+  expect(file.headers()["content-disposition"]).toMatch(/attachment; filename="leads-[\w-]+\.xlsx"/);
 });
 
 test("signed-out visitors are sent to sign-in and APIs refuse them", async ({ page, request }) => {
