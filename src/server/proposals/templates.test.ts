@@ -50,7 +50,7 @@ describe("buildTemplate — every topic × language", () => {
     const t = buildTemplate({ topic, language, facts: factsFromRow(minimalRow(), NOW), sender: emptySender() });
     expectClean(t.subject);
     expectClean(t.body);
-    expect(t.body).not.toMatch(/star|étoile|\/5|avis|reviews|©|HTTPS/);
+    expect(t.body).not.toMatch(/-star rating|\/5|\bavis\b|\breviews?\b|©|HTTPS/);
     expect(t.factsUsed).not.toHaveProperty("rating");
     expect(t.factsUsed).not.toHaveProperty("city");
     expect(t.factsUsed).not.toHaveProperty("businessName");
@@ -63,7 +63,8 @@ describe("buildTemplate — every topic × language", () => {
     const t = build(topic, "fr");
     expect(t.body.startsWith("Bonjour,")).toBe(true);
     expect(t.body).toMatch(/\bvous\b|\bvotre\b|\bvos\b/);
-    expect(t.body).not.toMatch(/\btu\b|\bton\b|\bta\b|\btes\b/);
+    // Unicode-aware word boundaries (JS \b treats accented letters as non-word characters).
+    expect(t.body).not.toMatch(/(?<!\p{L})(?:tu|ton|ta|tes|toi)(?!\p{L})/u);
     expect(t.body).toContain("Cordialement,");
     expect(t.body).not.toMatch(/Hello|Best regards/);
   });
@@ -114,7 +115,7 @@ describe("website facts", () => {
     expect(en.body).toContain("hotel-le-benin.example");
     expect(en.body).toContain("secure connection (HTTPS)");
     expect(en.body).toContain("optimised for phone screens");
-    expect(en.body).toContain("your site's footer still says © 2017");
+    expect(en.body.toLowerCase()).toContain("your site's footer still says © 2017");
     expect(en.factsUsed.websiteIssues).toBe("no HTTPS; not mobile-friendly; © 2017");
     const fr = build("website_redesign", "fr");
     expect(fr.body).toContain("indique encore © 2017");

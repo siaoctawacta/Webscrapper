@@ -55,7 +55,7 @@ beforeAll(async () => {
   );
   await insertResults(otherJob, [{ sourceRecordId: "other-1", name: "Other job row" }]);
   const bobJob = await insertJob(bob.id, { status: "completed" });
-  [bobRow] = await insertResults(bobJob, [{ sourceRecordId: "bob-1", name: "Bob row" }]);
+  bobRow = (await insertResults(bobJob, [{ sourceRecordId: "bob-1", name: "Bob row" }]))[0]!;
 });
 afterAll(closeDb);
 

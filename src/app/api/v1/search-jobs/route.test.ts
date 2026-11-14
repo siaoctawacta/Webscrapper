@@ -454,3 +454,17 @@ describe("GET/DELETE /api/v1/search-jobs/{id} and cancel", () => {
     expect((await del(alice, job.id)).status).toBe(404);
   });
 });
+
+describe("POST /api/v1/search-jobs — spending", () => {
+  it("refuses an over-budget Google keyword search before paying for geocoding", async () => {
+    setEnv({ GOOGLE_MAPS_API_KEY: "test-key-not-real" });
+    await db().insert(userSettings).values({ userId: alice.id, monthlyRequestLimit: 10 });
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const res = await create(alice, { query: "hôtel", location: "Lomé, Togo", targetCount: 1000, confirm: true });
+    expect(res.status).toBe(429);
+    expect((await errorOf(res)).code).toBe("quota_exceeded");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+    expect(await db().select().from(usageLogs)).toHaveLength(0);
+  });
+});
