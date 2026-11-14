@@ -103,14 +103,14 @@ type Ctx = {
   biz: string;
 };
 
-function use(ctx: Ctx, key: string, value: string | number | null) {
+function note(ctx: Ctx, key: string, value: string | number | null) {
   ctx.used[key] = value;
 }
 
 function greeting(ctx: Ctx): string {
   if (ctx.lang === "fr") return "Bonjour,";
   if (ctx.f.name) {
-    use(ctx, "businessName", ctx.f.name);
+    note(ctx, "businessName", ctx.f.name);
     return `Hello ${ctx.f.name} team,`;
   }
   return "Hello,";
@@ -151,7 +151,7 @@ const SERVICE: Record<Language, Record<Exclude<ProposalTopic, "custom">, string>
 function serviceLine(ctx: Ctx, topic: ProposalTopic): string {
   if (topic !== "custom") return SERVICE[ctx.lang][topic];
   if (ctx.svc) {
-    use(ctx, "customService", ctx.svc);
+    note(ctx, "customService", ctx.svc);
     return ctx.lang === "fr"
       ? `J'accompagne les entreprises locales avec le service suivant${NBSP}: ${ctx.svc}.`
       : `I help local businesses with ${ctx.svc}.`;
@@ -166,14 +166,14 @@ function serviceLine(ctx: Ctx, topic: ProposalTopic): string {
 function discovery(ctx: Ctx, opts: { noWebsite?: boolean } = {}): string | null {
   const { name, category: cat, city } = ctx.f;
   const noWebsite = Boolean(opts.noWebsite);
-  if (noWebsite) use(ctx, "websiteStatus", "none");
+  if (noWebsite) note(ctx, "websiteStatus", "none");
   if (!name && !cat && !city) {
     if (!noWebsite) return null;
     return ctx.lang === "fr" ? "J'ai remarqué que vous n'avez pas encore de site web." : "I noticed you don't have a website yet.";
   }
-  if (name) use(ctx, "businessName", name);
-  if (cat) use(ctx, "category", cat);
-  if (city) use(ctx, "city", city);
+  if (name) note(ctx, "businessName", name);
+  if (cat) note(ctx, "category", cat);
+  if (city) note(ctx, "city", city);
 
   if (ctx.lang === "fr") {
     let s: string;
@@ -204,9 +204,9 @@ function ratingSentence(ctx: Ctx, variant: "congrats" | "base"): string | null {
   const onMaps = source === "google_places";
   const r = numberFormat(ctx.lang, 1).format(rating);
   const n = numberFormat(ctx.lang).format(reviewCount);
-  use(ctx, "rating", rating);
-  use(ctx, "reviewCount", reviewCount);
-  if (onMaps) use(ctx, "ratingSource", "Google Maps");
+  note(ctx, "rating", rating);
+  note(ctx, "reviewCount", reviewCount);
+  if (onMaps) note(ctx, "ratingSource", "Google Maps");
 
   if (ctx.lang === "fr") {
     const where = onMaps ? " sur Google Maps" : "";
@@ -225,8 +225,8 @@ function ratingSentence(ctx: Ctx, variant: "congrats" | "base"): string | null {
 function searchPhrase(ctx: Ctx): string | null {
   const { category: cat, city } = ctx.f;
   if (!cat) return null;
-  use(ctx, "category", cat);
-  if (city) use(ctx, "city", city);
+  note(ctx, "category", cat);
+  if (city) note(ctx, "city", city);
   const text = city ? `${cat} ${ctx.lang === "fr" ? "à" : "in"} ${city}` : cat;
   return quote(text, ctx.lang);
 }
@@ -254,7 +254,7 @@ const ISSUE_FACT: Record<WebsiteIssue["kind"], string> = {
 
 function conceptLine(ctx: Ctx, url: string | null | undefined): string | null {
   if (!url) return null;
-  use(ctx, "conceptUrl", url);
+  note(ctx, "conceptUrl", url);
   return ctx.lang === "fr"
     ? `J'ai également préparé une première idée de page d'accueil pour ${ctx.biz}, que vous pouvez consulter ici${NBSP}: ${url}`
     : `I've also put together a first homepage idea for ${ctx.biz}. You can see it here: ${url}`;
@@ -322,19 +322,19 @@ function websiteRedesign(ctx: Ctx, head: Paragraph[], conceptUrl?: string | null
   const host = f.websiteHost;
   let review: Paragraph;
   if (f.websiteStatus === "none") {
-    use(ctx, "websiteStatus", "none");
+    note(ctx, "websiteStatus", "none");
     review = fr
       ? [f.name ? `J'ai remarqué que ${f.name} n'a pas encore de site web.` : "J'ai remarqué que vous n'avez pas encore de site web."]
       : [f.name ? `I noticed ${f.name} doesn't have a website yet.` : "I noticed you don't have a website yet."];
   } else if (f.websiteIssues.length > 0) {
-    if (host) use(ctx, "website", host);
-    use(ctx, "websiteIssues", f.websiteIssues.map((i) => (i.kind === "old_copyright" ? `© ${i.year}` : ISSUE_FACT[i.kind])).join("; "));
+    if (host) note(ctx, "website", host);
+    note(ctx, "websiteIssues", f.websiteIssues.map((i) => (i.kind === "old_copyright" ? `© ${i.year}` : ISSUE_FACT[i.kind])).join("; "));
     const lead = fr
       ? `J'ai consulté ${host ?? "votre site web"} et j'ai remarqué quelques points qui peuvent vous faire perdre des clients${NBSP}:`
       : `I had a look at ${host ?? "your website"} and noticed a few things that may be costing you customers:`;
     review = [lead, ...f.websiteIssues.map((i) => issueLine(i, lang))].join("\n");
   } else if (f.websiteChecked) {
-    if (host) use(ctx, "website", host);
+    if (host) note(ctx, "website", host);
     review = fr
       ? [`J'ai consulté ${host ?? "votre site web"} et j'ai quelques idées pour qu'il vous apporte encore plus de clients.`]
       : [`I had a look at ${host ?? "your website"}, and I have a few ideas that could help it bring in even more customers.`];
@@ -380,7 +380,7 @@ function localSeo(ctx: Ctx, head: Paragraph[], conceptUrl?: string | null): Topi
   const { f, lang } = ctx;
   const phrase = searchPhrase(ctx);
   const noWebsite = f.websiteStatus === "none";
-  if (noWebsite) use(ctx, "websiteStatus", "none");
+  if (noWebsite) note(ctx, "websiteStatus", "none");
   if (lang === "fr") {
     return {
       subject: f.name ? `Plus de visibilité sur Google pour ${f.name}` : "Plus de visibilité sur Google pour votre entreprise",
@@ -428,11 +428,11 @@ function socialMedia(ctx: Ctx, head: Paragraph[], conceptUrl?: string | null): T
   const fr = lang === "fr";
   let presence: string | null = null;
   if (f.socialNetworks.length > 0) {
-    use(ctx, "socials", f.socialNetworks.join(", "));
+    note(ctx, "socials", f.socialNetworks.join(", "));
     const list = listJoin(f.socialNetworks, lang);
     presence = fr ? `J'ai vu que vous utilisez déjà ${list}, c'est un très bon début.` : `I saw that you're already on ${list}, which is a great start.`;
   } else if (f.websiteChecked) {
-    use(ctx, "socials", "none found on website");
+    note(ctx, "socials", "none found on website");
     presence = fr
       ? "Je n'ai trouvé aucune page de réseau social liée à votre site web."
       : "I couldn't find any social media pages linked from your website.";
