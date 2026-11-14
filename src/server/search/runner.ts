@@ -28,6 +28,8 @@ export type RunnerDeps = {
   enrichOptions?: Omit<EnrichOptions, "signal">;
   /** Parallel website visits (at most one per host). Default env CRAWL_CONCURRENCY. */
   crawlConcurrency?: number;
+  /** Aborted by the worker when it shuts down or the queue gives up: the job stops and keeps its results. */
+  signal?: AbortSignal;
 };
 
 const INSERT_CHUNK = 200;
@@ -104,6 +106,7 @@ class SearchRun {
   private noBudget = false;
   private providerError: ProviderError | null = null;
   private cancelled = false;
+  private interrupted = false;
   private deleted = false;
   private finalized = false;
 
@@ -121,25 +124,49 @@ class SearchRun {
   }
 
   private get stopping() {
-    return this.cancelled || this.deleted;
+    return this.cancelled || this.deleted || this.interrupted;
   }
 
   async execute(): Promise<void> {
     try {
       await this.event("started", `Search started for “${this.job.query}” in ${this.job.location.label}.`);
-      this.provider = this.deps.provider ?? getProvider(this.job.provider);
+      this.provider = this.deps.provider ?? this.providerFromRegistry();
+      this.watchExternalSignal();
       this.startCancelWatch();
       await this.searchPhase();
-      if (!this.deleted && this.job.enrich && !this.cancelled && this.inserted > 0) await this.enrichPhase();
+      if (!this.stopping && this.job.enrich && this.inserted > 0) await this.enrichPhase();
       if (!this.deleted && this.inserted > 1) await this.duplicatePass();
       if (!this.deleted) await this.finalize();
     } catch (e) {
       await this.fail(e);
     } finally {
       this.stopCancelWatch();
+      this.deps.signal?.removeEventListener("abort", this.onExternalAbort);
       await this.usage.flush().catch((e) => console.error("[search] usage flush failed", e));
       if (!this.finalized && !this.deleted) await this.markFailedIfActive(STOP_MESSAGES.unexpected()).catch(() => undefined);
     }
+  }
+
+  private providerFromRegistry(): BusinessProvider {
+    try {
+      return getProvider(this.job.provider);
+    } catch (e) {
+      if (e instanceof HttpError) throw new UserFacingError(STOP_MESSAGES.providerUnavailable());
+      throw e;
+    }
+  }
+
+  private readonly onExternalAbort = () => {
+    if (this.signal.aborted) return;
+    this.interrupted = true;
+    this.controller.abort(new DOMException("The worker is shutting down", "AbortError"));
+  };
+
+  private watchExternalSignal() {
+    const s = this.deps.signal;
+    if (!s) return;
+    if (s.aborted) this.onExternalAbort();
+    else s.addEventListener("abort", this.onExternalAbort, { once: true });
   }
 
   /* ───────────────────────────── search ───────────────────────────── */
@@ -469,6 +496,10 @@ class SearchRun {
     const n = this.inserted;
     const isSample = this.provider.isSample;
     if (this.cancelled) return { status: "cancelled", stopReason: STOP_MESSAGES.cancelled(n), error: null };
+    if (this.interrupted) {
+      const msg = STOP_MESSAGES.workerStopped();
+      return n > 0 ? { status: "partial", stopReason: msg, error: msg } : { status: "failed", stopReason: null, error: msg };
+    }
     if (this.providerError) {
       const msg = this.providerError.message;
       return n > 0

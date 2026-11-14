@@ -33,6 +33,12 @@ export const GOOGLE_NOT_CONFIGURED_MESSAGE =
   "Google Maps isn't set up on this server yet, so only sample data is available. Ask an administrator to add a Google Maps API key.";
 export const QUEUE_UNAVAILABLE_MESSAGE = "We couldn't start the search right now because the background worker queue is unavailable. Please try again in a moment.";
 
+/**
+ * How long the queue lets one search run before treating it as overrun. Large Google searches with
+ * thousands of website visits can take an hour; the runner itself never gives up mid-way.
+ */
+export const SEARCH_RUN_EXPIRE_SECONDS = 6 * 3600;
+
 export type SearchDeps = {
   /** Use this provider instead of the registry (tests). */
   provider?: BusinessProvider;
@@ -212,7 +218,7 @@ export async function createSearchJob(
 
     let queueJobId: string | null;
     try {
-      queueJobId = await (deps.enqueue ?? enqueueJob)("search.run", { jobId: job.id });
+      queueJobId = await (deps.enqueue ?? enqueueJob)("search.run", { jobId: job.id }, { expireInSeconds: SEARCH_RUN_EXPIRE_SECONDS });
     } catch (e) {
       console.error("[search] enqueue failed", e);
       await db().delete(searchJobs).where(and(eq(searchJobs.id, job.id), eq(searchJobs.userId, user.id)));

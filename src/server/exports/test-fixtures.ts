@@ -74,7 +74,7 @@ export const withLead = (row: BusinessRow, lead: Partial<NonNullable<BusinessRow
   },
 });
 
-function sortRows(rows: BusinessRow[], sort: ListQuery["sort"]): BusinessRow[] {
+export function sortRows(rows: BusinessRow[], sort: ListQuery["sort"]): BusinessRow[] {
   if (!sort.length) return [...rows];
   return [...rows].sort((a, b) => {
     for (const s of sort) {

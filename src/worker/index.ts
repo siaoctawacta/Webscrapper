@@ -15,7 +15,8 @@ async function main() {
   const concurrency = Math.max(1, env().MAX_CONCURRENT_JOBS);
 
   await boss.work<{ jobId: string }>(QUEUES.searchRun, { localConcurrency: concurrency, batchSize: 1 }, async ([job]) => {
-    if (job) await runSearchJob(job.data.jobId);
+    // job.signal aborts on shutdown/overrun: the runner then stops and keeps what it found.
+    if (job) await runSearchJob(job.data.jobId, { signal: job.signal });
   });
   await boss.work<{ exportId: string }>(QUEUES.exportRun, { localConcurrency: 2, batchSize: 1 }, async ([job]) => {
     if (job) await runExport(job.data.exportId);
