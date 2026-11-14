@@ -13,7 +13,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pg", "pg-boss", "exceljs", "cheerio"],
   poweredByHeader: false,
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Shared homepage concepts are shown to prospects: send no referrer at all (later rules win).
+      { source: "/c/:token", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+    ];
   },
 };
 

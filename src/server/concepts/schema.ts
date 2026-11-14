@@ -30,7 +30,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 /* ───────────────────────────── Small helpers ───────────────────────────── */
 
 // Control and invisible characters never belong in page copy.
-const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F​-‏  ‪-‮⁦-⁩﻿]/g;
+const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u2028\u2029\u202A-\u202E\u2066-\u2069\uFEFF]/g;
 
 /** Remove control characters and collapse runs of spaces/tabs (newlines kept for multi-line bodies). */
 export function cleanCopy(s: string): string {
@@ -201,8 +201,8 @@ const conceptOptionsShape = {
   tone: z.enum(CONCEPT_TONES),
   primaryColor: z
     .union([hexColorSchema, z.literal(""), z.null()])
-    .optional()
-    .transform((v) => v || undefined),
+    .transform((v) => v || undefined)
+    .optional(),
   language: z.enum(CONCEPT_LANGUAGES),
   sections: sectionsSchema.optional(),
   notes: optField(1000),
@@ -252,6 +252,8 @@ export type ConceptSummaryDto = {
   language: ConceptLanguage;
   generatedBy: "template" | "ai";
   shareEnabled: boolean;
+  /** Primary, accent, surface and background colours (#rrggbb) for a small preview. */
+  swatches: string[];
   createdAt: string;
   updatedAt: string;
 };

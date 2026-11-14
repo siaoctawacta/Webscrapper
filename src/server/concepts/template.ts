@@ -95,7 +95,7 @@ const EN: Copy = {
       case "luxury":
         return `Discover ${c.name}`;
       case "energetic":
-        return `${c.phrase}${where} — let's get started`;
+        return `${c.phrase}${where} — let's talk!`;
     }
   },
   subheadline: (c) => {
@@ -160,7 +160,7 @@ const EN: Copy = {
     return sets[c.tone];
   },
   testimonialsNote:
-    "Placeholder — add two or three short reviews from real customers here, with their permission. Never publish invented testimonials.",
+    "Add two or three short reviews from real customers here, with their permission. Never publish invented testimonials.",
   gallery: (c) => [
     ...c.services.slice(0, 3).map((s) => `${capitalize(s)} — a real photo of your work`),
     "Your team at work",
@@ -200,7 +200,7 @@ const FR: Copy = {
       case "luxury":
         return `Découvrez ${c.name}`;
       case "energetic":
-        return `${c.phrase}${where} : lançons-nous !`;
+        return `${c.phrase}${where} : parlons-en !`;
     }
   },
   subheadline: (c) => {
@@ -265,7 +265,7 @@ const FR: Copy = {
     return sets[c.tone];
   },
   testimonialsNote:
-    "Emplacement réservé — ajoutez ici deux ou trois courts avis de vrais clients, avec leur accord. Ne publiez jamais de faux témoignages.",
+    "Ajoutez ici deux ou trois courts avis de vrais clients, avec leur accord. Ne publiez jamais de faux témoignages.",
   gallery: (c) => [
     ...c.services.slice(0, 3).map((s) => `${capitalize(s)} — une vraie photo de votre travail`),
     "Votre équipe au travail",
