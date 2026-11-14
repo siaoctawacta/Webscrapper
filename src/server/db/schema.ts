@@ -364,6 +364,9 @@ export const proposals = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     businessId: uuid("business_id").references(() => businesses.id, { onDelete: "set null" }),
     leadId: uuid("lead_id").references(() => leads.id, { onDelete: "set null" }),
+    /** The place this proposal was written for (place ids are storable under every source policy). */
+    source: text("source").$type<SourceId>(),
+    sourceRecordId: text("source_record_id"),
     /** Business name at the time of writing (user-authored message content). */
     businessName: text("business_name"),
     topic: text("topic").$type<ProposalTopic>().notNull(),
@@ -375,7 +378,10 @@ export const proposals = pgTable(
     sentAt: ts("sent_at"),
     createdAt: createdAt(),
   },
-  (t) => [index("proposals_user_idx").on(t.userId, t.createdAt)],
+  (t) => [
+    index("proposals_user_idx").on(t.userId, t.createdAt),
+    index("proposals_user_place_idx").on(t.userId, t.source, t.sourceRecordId),
+  ],
 );
 
 export const concepts = pgTable(

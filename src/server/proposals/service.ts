@@ -102,6 +102,8 @@ type ResolvedRef = {
   businessId: string | null;
   name: string | null;
   source: SourceId;
+  /** Provider place id — persistable under every source policy, so it can link history across results and leads. */
+  sourceRecordId: string;
   lead: { status: string } | null;
 };
 
@@ -110,13 +112,20 @@ async function resolveRef(tx: DbOrTx, user: AppUser, ref: ProposalRef): Promise<
   if (!isUuid(ref.id)) throw notFound(ref.kind === "lead" ? "Lead" : "Search result");
   if (ref.kind === "lead") {
     const [r] = await tx
-      .select({ leadId: leads.id, status: leads.status, businessId: businesses.id, name: businesses.name, source: businesses.source })
+      .select({
+        leadId: leads.id,
+        status: leads.status,
+        businessId: businesses.id,
+        name: businesses.name,
+        source: businesses.source,
+        sourceRecordId: businesses.sourceRecordId,
+      })
       .from(leads)
       .innerJoin(businesses, eq(businesses.id, leads.businessId))
       .where(and(eq(leads.id, ref.id), eq(leads.userId, user.id), eq(businesses.userId, user.id)))
       .limit(1);
     if (!r) throw notFound("Lead");
-    return { leadId: r.leadId, businessId: r.businessId, name: r.name, source: r.source, lead: { status: r.status } };
+    return { leadId: r.leadId, businessId: r.businessId, name: r.name, source: r.source, sourceRecordId: r.sourceRecordId, lead: { status: r.status } };
   }
   const [r] = await tx
     .select({ name: searchResults.name, source: searchResults.source, sourceRecordId: searchResults.sourceRecordId })
@@ -130,7 +139,7 @@ async function resolveRef(tx: DbOrTx, user: AppUser, ref: ProposalRef): Promise<
     .from(businesses)
     .where(and(eq(businesses.userId, user.id), eq(businesses.source, r.source), eq(businesses.sourceRecordId, r.sourceRecordId)))
     .limit(1);
-  return { leadId: null, businessId: b?.id ?? null, name: r.name, source: r.source, lead: null };
+  return { leadId: null, businessId: b?.id ?? null, name: r.name, source: r.source, sourceRecordId: r.sourceRecordId, lead: null };
 }
 
 /**
@@ -153,6 +162,8 @@ export async function saveProposal(user: AppUser, input: SaveProposalInput, opts
         userId: user.id,
         businessId: resolved?.businessId ?? null,
         leadId: resolved?.leadId ?? null,
+        source: resolved?.source ?? null,
+        sourceRecordId: resolved?.sourceRecordId ?? null,
         businessName,
         topic: data.topic,
         language: data.language,
@@ -208,16 +219,22 @@ export async function saveProposal(user: AppUser, input: SaveProposalInput, opts
 
 export const HISTORY_LIMIT = 50;
 
-/** The user's proposals, newest first — all of them, or those for one business (ref). Foreign ref → 404. */
+/**
+ * The user's proposals, newest first — all of them, or those for one place (ref). Foreign ref → 404.
+ *
+ * A place's history = proposals linked to the lead or its saved business, plus proposals written from
+ * a search result for the same place (matched by source + source_record_id).
+ */
 export async function listProposals(user: AppUser, ref?: ProposalRef | null): Promise<ProposalDto[]> {
   let scope: SQL | undefined;
   if (ref) {
     const r = await resolveRef(db(), user, ref);
-    const links = [r.leadId ? eq(proposals.leadId, r.leadId) : undefined, r.businessId ? eq(proposals.businessId, r.businessId) : undefined].filter(
-      (c): c is SQL => c !== undefined,
+    const savedForPlace = and(eq(proposals.source, r.source), eq(proposals.sourceRecordId, r.sourceRecordId))!;
+    scope = or(
+      ...[r.leadId ? eq(proposals.leadId, r.leadId) : undefined, r.businessId ? eq(proposals.businessId, r.businessId) : undefined, savedForPlace].filter(
+        (c): c is SQL => c !== undefined,
+      ),
     );
-    if (links.length === 0) return [];
-    scope = or(...links);
   }
   const rows = await db()
     .select()

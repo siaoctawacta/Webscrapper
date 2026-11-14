@@ -1,5 +1,5 @@
 import "server-only";
-import { APICallError, createGateway, generateText, NoObjectGeneratedError, Output, type LanguageModel } from "ai";
+import { createGateway, generateText, JSONParseError, NoObjectGeneratedError, Output, TypeValidationError, type LanguageModel } from "ai";
 import type { z } from "zod";
 import type { AppUser } from "../auth/session";
 import { env } from "../env";
@@ -43,6 +43,11 @@ function resolveModel(deps?: GenerateStructuredDeps): LanguageModel | null {
   return gateway(env().AI_MODEL);
 }
 
+/** Output arrived but failed our own schema check. */
+class InvalidAiOutputError extends Error {
+  override name = "InvalidAiOutputError";
+}
+
 function isTimeout(e: unknown, signal: AbortSignal): boolean {
   if (signal.aborted) return true;
   return e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError");
@@ -51,9 +56,17 @@ function isTimeout(e: unknown, signal: AbortSignal): boolean {
 /** Maps any failure to a short, user-facing message. Never includes prompt content. */
 function failureMessage(e: unknown, signal: AbortSignal): string {
   if (isTimeout(e, signal)) return AI_MESSAGES.timeout;
-  if (NoObjectGeneratedError.isInstance(e)) return AI_MESSAGES.invalidOutput;
-  if (APICallError.isInstance(e)) return AI_MESSAGES.providerError;
-  return AI_MESSAGES.invalidOutput;
+  if (
+    e instanceof InvalidAiOutputError ||
+    NoObjectGeneratedError.isInstance(e) ||
+    TypeValidationError.isInstance(e) ||
+    JSONParseError.isInstance(e) ||
+    (e instanceof Error && e.name === "AI_NoOutputGeneratedError")
+  ) {
+    return AI_MESSAGES.invalidOutput;
+  }
+  // Connection, authentication, rate limit or retry exhaustion at the gateway.
+  return AI_MESSAGES.providerError;
 }
 
 /**
@@ -96,7 +109,7 @@ export async function generateStructured<S extends z.ZodType>(
     });
     // The SDK validates against the schema already; parse again so transforms/refinements always apply.
     const parsed = opts.schema.safeParse(result.output);
-    if (!parsed.success) throw new Error("AI output failed schema validation");
+    if (!parsed.success) throw new InvalidAiOutputError("AI output failed schema validation");
     data = parsed.data;
   } catch (e) {
     await recordUsage(usage).catch(() => undefined);

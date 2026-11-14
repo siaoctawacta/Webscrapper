@@ -233,4 +233,19 @@ describe("saveProposal / listProposals", () => {
     expect(await listProposals(other)).toEqual([]);
     await expect(listProposals(other, { kind: "lead", id: lead.id })).rejects.toMatchObject({ code: "not_found" });
   });
+
+  it("keeps the history of a search result that was never saved, and carries it over once it becomes a lead", async () => {
+    const result = await insertResult(user.id, { sourceRecordId: "sample-later" });
+    const p1 = await saveProposal(user, { ...base, subject: "From results", ref: { kind: "result", id: result.id }, channel: "whatsapp" });
+    expect(p1.businessId).toBeNull();
+    expect((await listProposals(user, { kind: "result", id: result.id })).map((p) => p.id)).toEqual([p1.id]);
+
+    // Same place saved later as a lead: its history includes the earlier proposal.
+    const { lead } = await insertLead(user.id, { sourceRecordId: "sample-later" });
+    expect((await listProposals(user, { kind: "lead", id: lead.id })).map((p) => p.id)).toEqual([p1.id]);
+
+    // Another user with the same place id sees nothing of it.
+    const theirs = await insertResult(other.id, { sourceRecordId: "sample-later" });
+    expect(await listProposals(other, { kind: "result", id: theirs.id })).toEqual([]);
+  });
 });

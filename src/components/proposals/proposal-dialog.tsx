@@ -17,6 +17,7 @@ import {
 import { api, ApiClientError } from "@/lib/api-client";
 import { cn, formatRelative } from "@/lib/utils";
 import type { ProposalListResponse, SaveProposalResponse } from "@/server/proposals/types";
+import { mailtoAddress, mailtoUrl, whatsappUrl } from "./links";
 import { Badge } from "@/components/ui/badge";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -78,18 +79,6 @@ export const AI_UNAVAILABLE_TOOLTIP = "AI isn't configured — add an AI Gateway
 export const NO_EMAIL_TOOLTIP = "No email was found on their website";
 export const NO_PHONE_TOOLTIP = "No phone number that WhatsApp can use";
 
-const SIMPLE_EMAIL = /^[^\s@?&#<>"]+@[^\s@?&#<>"]+\.[^\s@?&#<>"]+$/;
-
-/** mailto: link with encoded subject and body. */
-export function mailtoUrl(email: string, subject: string, body: string): string {
-  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
-
-/** wa.me link for an E.164 digits string. */
-export function whatsappUrl(digits: string, text: string): string {
-  return `https://wa.me/${digits.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
-}
-
 function factValue(key: string, value: string | number): string {
   if (key === "websiteStatus" && value === "none") return "none found";
   if (key === "conceptUrl") return "shared link";
@@ -97,12 +86,12 @@ function factValue(key: string, value: string | number): string {
   return String(value);
 }
 
-function DisabledHint({ hint, children }: { hint: string | null; children: React.ReactElement }) {
+function DisabledHint({ hint, children, className }: { hint: string | null; children: React.ReactElement; className?: string }) {
   if (!hint) return children;
   return (
     <Tooltip content={hint}>
       {/* Disabled buttons don't receive pointer/focus events, so the wrapper carries the tooltip. */}
-      <span tabIndex={0} aria-label={hint} className="inline-flex rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+      <span tabIndex={0} aria-label={hint} className={cn("inline-flex rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/40", className)}>
         {children}
       </span>
     </Tooltip>
@@ -120,7 +109,7 @@ function LanguageToggle({ value, onChange, disabled }: { value: Language; onChan
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label="Language" onKeyDown={onKeyDown} className="inline-flex h-9 items-center gap-1 rounded-lg bg-muted p-1">
+    <div role="radiogroup" aria-label="Language" onKeyDown={onKeyDown} className="inline-flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-1">
       {LANGUAGES.map((l) => (
         <button
           key={l}
@@ -213,8 +202,12 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
   /** Channel + content last logged, so opening email then marking as sent doesn't log twice. */
   const [savedKey, setSavedKey] = React.useState<string | null>(null);
 
+  /** Options the current draft was generated with (to tell the user when they changed). */
+  const [generatedWith, setGeneratedWith] = React.useState<string | null>(null);
+  const optionsKey = `${topic}|${language}|${topic === "custom" ? customService.trim() : ""}`;
+
   const generate = useMutation({
-    mutationFn: (opts: { useAi: boolean }) =>
+    mutationFn: (opts: { useAi: boolean; key: string }) =>
       api<ProposalDraft>("/api/v1/proposals/draft", {
         method: "POST",
         json: {
@@ -225,11 +218,15 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
           useAi: opts.useAi,
         },
       }),
-    onSuccess: (d) => {
+    onSuccess: (d, opts) => {
       setDraft(d);
       setSubject(d.subject);
       setBody(d.body);
       setSavedKey(null);
+      setGeneratedWith(opts.key);
+      if (opts.useAi && d.generatedBy !== "ai") {
+        toast.warning("Showing the template version", { description: d.warnings.at(-1) ?? "The AI polish didn't work this time." });
+      }
     },
     onError: (e) => toast.error("Couldn't write the draft", { description: errorMessage(e, "Please try again.") }),
   });
@@ -239,8 +236,8 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
   React.useEffect(() => {
     if (started.current || settings.isPending) return;
     started.current = true;
-    generate.mutate({ useAi: false });
-  }, [settings.isPending, generate]);
+    generate.mutate({ useAi: false, key: optionsKey });
+  }, [settings.isPending, generate, optionsKey]);
 
   const save = useMutation({
     mutationFn: (channel: ProposalChannel) =>
@@ -265,22 +262,25 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
   });
 
   const channels = draft?.channels ?? { email: null, whatsappNumber: null };
-  const email = channels.email && SIMPLE_EMAIL.test(channels.email) ? channels.email : null;
+  const email = mailtoAddress(channels.email);
   const whatsapp = channels.whatsappNumber;
   const hasContent = subject.trim() !== "" && body.trim() !== "";
   const busy = generate.isPending;
 
-  const stale =
-    draft !== null && (draft.topic !== topic || draft.language !== language || (topic === "custom" && (draft.factsUsed.customService ?? "") !== customService.trim().toLowerCase() && customService.trim() !== ""));
+  const stale = draft !== null && generatedWith !== null && generatedWith !== optionsKey;
 
   function logSend(channel: ProposalChannel, opts: { closeAfter?: boolean } = {}) {
     const key = `${channel}\n${subject}\n${body}`;
     const done = (res?: SaveProposalResponse) => {
-      const moved = res?.lead && res.lead.status === "proposal_sent" ? ` Lead status: ${LEAD_STATUS_LABELS.proposal_sent}.` : "";
-      toast.success(opts.closeAfter ? "Marked as sent" : "Saved to this business's proposal history", {
-        description: `Sent ${CHANNEL_LABEL[channel]}.${moved}`,
-      });
-      if (opts.closeAfter) onClose();
+      const moved = res?.lead?.status === "proposal_sent" ? ` Lead status: ${LEAD_STATUS_LABELS.proposal_sent}.` : "";
+      if (opts.closeAfter) {
+        toast.success("Marked as sent", { description: `Sent ${CHANNEL_LABEL[channel]}.${moved}` });
+        onClose();
+      } else {
+        toast.success("Saved to this business's proposal history", {
+          description: `Opened ${channel === "email" ? "in your email app" : "in WhatsApp"}.${moved}`,
+        });
+      }
     };
     if (savedKey === key) return done();
     save.mutate(channel, {
@@ -311,7 +311,11 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
   }
 
   const last = history.data?.proposals[0];
-  const facts = Object.entries(draft?.factsUsed ?? {}).filter((e): e is [string, string | number] => e[1] !== null && e[1] !== "");
+  const factOrder = Object.keys(FACT_LABELS);
+  const rank = (k: string) => (factOrder.includes(k) ? factOrder.indexOf(k) : factOrder.length);
+  const facts = Object.entries(draft?.factsUsed ?? {})
+    .filter((e): e is [string, string | number] => e[1] !== null && e[1] !== "")
+    .sort((a, b) => rank(a[0]) - rank(b[0]));
   const ids = React.useId();
 
   return (
@@ -376,7 +380,7 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
               </div>
             </div>
           </DisabledHint>
-          <Button size="sm" variant={draft ? "outline" : "default"} onClick={() => generate.mutate({ useAi })} loading={busy}>
+          <Button size="sm" variant={draft ? "outline" : "default"} onClick={() => generate.mutate({ useAi, key: optionsKey })} loading={busy}>
             {!busy && (useAi ? <Sparkles /> : <RefreshCw />)}
             {draft ? "Generate again" : "Generate"}
           </Button>
@@ -443,25 +447,26 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
         )}
       </div>
 
-      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-popover px-5 py-3.5 sm:px-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={copy} disabled={!hasContent}>
+      <div className="sticky bottom-0 mt-auto grid gap-2 border-t border-border bg-popover px-5 py-3.5 sm:flex sm:items-center sm:justify-between sm:px-6">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={copy} disabled={!hasContent}>
             <Copy /> Copy
           </Button>
-          <DisabledHint hint={draft && !email ? NO_EMAIL_TOOLTIP : null}>
-            <Button size="sm" variant="outline" onClick={openEmail} disabled={!email || !hasContent}>
-              <Mail /> Open in email
+          <DisabledHint hint={draft && !email ? NO_EMAIL_TOOLTIP : null} className="w-full sm:w-auto">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={openEmail} disabled={!email || !hasContent} aria-label="Open in email">
+              <Mail /> <span className="sm:hidden">Email</span>
+              <span className="hidden sm:inline">Open in email</span>
             </Button>
           </DisabledHint>
-          <DisabledHint hint={draft && !whatsapp ? NO_PHONE_TOOLTIP : null}>
-            <Button size="sm" variant="outline" onClick={openWhatsapp} disabled={!whatsapp || !hasContent}>
+          <DisabledHint hint={draft && !whatsapp ? NO_PHONE_TOOLTIP : null} className="w-full sm:w-auto">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={openWhatsapp} disabled={!whatsapp || !hasContent}>
               <MessageCircle /> WhatsApp
             </Button>
           </DisabledHint>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" disabled={!hasContent} loading={save.isPending}>
+            <Button size="sm" className="w-full sm:w-auto" disabled={!hasContent} loading={save.isPending}>
               {!save.isPending && <Send />} Mark as sent <ChevronDown className="opacity-70" />
             </Button>
           </DropdownMenuTrigger>
@@ -484,7 +489,10 @@ function ProposalEditor({ businessRef, business, onSent, onClose }: Omit<Proposa
 export function ProposalDialog({ open, onOpenChange, businessRef, business, onSent }: ProposalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg" className="gap-0 p-0" aria-describedby={undefined}>
+      <DialogContent
+        size="lg"
+        className="gap-0 p-0 max-sm:flex max-sm:h-dvh max-sm:max-h-dvh max-sm:w-screen max-sm:max-w-none max-sm:flex-col max-sm:rounded-none max-sm:border-0"
+      >
         {open && <ProposalEditor businessRef={businessRef} business={business} onSent={onSent} onClose={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>

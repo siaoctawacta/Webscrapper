@@ -90,14 +90,13 @@ describe("generateStructured", () => {
     const res = await generateStructured(call(), { model: mockJsonModel({ subject: "x".repeat(200), body: "B" }) });
     expect(res).toEqual({ ok: false, reason: "failed", message: AI_MESSAGES.invalidOutput });
     const notJson = await generateStructured(call(), { model: mockTextModel("Sure! Here is your email: Hello") });
-    expect(notJson).toMatchObject({ ok: false, reason: "failed" });
+    expect(notJson).toEqual({ ok: false, reason: "failed", message: AI_MESSAGES.invalidOutput });
     expect(await usageRows()).toHaveLength(2);
   });
 
   it("returns failed with a friendly message when the provider errors", async () => {
     const res = await generateStructured(call(), { model: failingModel() });
-    expect(res).toMatchObject({ ok: false, reason: "failed" });
-    expect(res.ok === false && res.message).toMatch(/try again/i);
+    expect(res).toEqual({ ok: false, reason: "failed", message: AI_MESSAGES.providerError });
   });
 
   it("times out instead of waiting forever", async () => {
