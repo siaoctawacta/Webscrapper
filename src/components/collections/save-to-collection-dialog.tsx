@@ -26,10 +26,12 @@ export type SaveToCollectionProps = {
   resultIds: string[] | null;
   query: ListQuery;
   count: number;
+  /** When set (e.g. "all filtered" minus a few excluded rows), resolves the exact ids at save time. */
+  resolveIds?: () => Promise<string[]>;
   onSaved?: () => void;
 };
 
-export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, query, count, onSaved }: SaveToCollectionProps) {
+export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, query, count, resolveIds, onSaved }: SaveToCollectionProps) {
   const qc = useQueryClient();
   const collections = useCollections();
   const [selected, setSelected] = React.useState<string | null>(null);
@@ -57,7 +59,8 @@ export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, q
         targetName = c.name;
       }
       if (!target) throw new Error("Choose a collection");
-      const body = resultIds ? { jobId, resultIds } : { jobId, query };
+      const ids = resultIds ?? (resolveIds ? await resolveIds() : null);
+      const body = ids ? { jobId, resultIds: ids } : { jobId, query };
       const res = await api<{ added: number; skipped: number }>(`/api/v1/collections/${target}/leads`, { method: "POST", json: body });
       return { ...res, id: target, name: targetName };
     },
