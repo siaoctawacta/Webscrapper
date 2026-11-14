@@ -9,6 +9,8 @@ export type EnrichmentResult = {
   socials: Socials;
   /** tel: links found on the site (raw). */
   phones: string[];
+  /** Mail-server check per email domain that was checked: false = domain has no MX record (→ email needs review). */
+  mx: Record<string, boolean>;
 };
 
 export type EnrichOptions = {
