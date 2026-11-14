@@ -109,6 +109,27 @@ describe("text and obfuscated emails", () => {
     expect(findObfuscatedEmails("name [at] domain [dot] com")).toEqual([]); // placeholder
     expect(findObfuscatedEmails("we are at the hotel. dot com bubble")).toEqual([]);
   });
+
+  it("never cuts an address glued to other letters (accents, any script) into a shorter one", () => {
+    // Without these checks "réservation@…" would yield the invented address "servation@…".
+    expect(findTextEmails("Écrivez à réservation@hotel-benin.tg ou jérôme@hotel.tg")).toEqual([]);
+    expect(findTextEmails("info@hôtel.tg contact@hotel.tgé a@b@hotel.tg")).toEqual([]);
+    expect(findTextEmails("Tél/Email:info@hotel.tg, (contact@hotel.tg)")).toEqual(["info@hotel.tg", "contact@hotel.tg"]);
+    expect(findObfuscatedEmails("réservation [at] hotel [dot] tg")).toEqual([]);
+    expect(findObfuscatedEmails(`${"k".repeat(70)} [at] hotel [dot] tg`)).toEqual([]);
+    expect(findObfuscatedEmails("info [at] hotel [dot] tgé")).toEqual([]);
+    expect(findObfuscatedEmails("Écrivez : accueil [at] hotel [dot] tg")).toEqual(["accueil@hotel.tg"]);
+  });
+
+  it("stays fast on long runs of address-like characters (adversarial pages)", () => {
+    const size = 1.5 * 1024 * 1024;
+    for (const text of ["a".repeat(size), "a.".repeat(size / 2), "a-b-".repeat(size / 4), "x [at] ".repeat(size / 7)]) {
+      const t0 = performance.now();
+      findTextEmails(text);
+      findObfuscatedEmails(text);
+      expect(performance.now() - t0).toBeLessThan(750);
+    }
+  });
 });
 
 describe("rankEmails", () => {

@@ -219,17 +219,31 @@ export function cfEmailFromHref(href: string): string | null {
   return m ? decodeCfEmail(m[1]!) : null;
 }
 
+/** A character that makes a match part of a longer word or address, in any script. */
+const GLUED_BEFORE = /[\p{L}\p{N}\p{M}._%+@-]/u;
+const GLUED_AFTER = /[\p{L}\p{N}\p{M}_@]/u;
+const LOCAL_CHAR = /[a-z0-9._%+-]/i;
+const SPACE = /\s/;
+/** Cuts text into runs of address-like characters (letters of every script stay inside a run). */
+const RUN_SEPARATOR_RE = /[^\p{L}\p{N}\p{M}._%+@-]+/u;
 const TEXT_EMAIL_RE = /[a-z0-9._%+-]{1,64}@[a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63})+/gi;
 
-/** Plain addresses in visible text. */
+/**
+ * Plain addresses in visible text. A match glued to other letters is skipped rather than cut:
+ * "réservation@hotel.tg" must never become "servation@hotel.tg".
+ */
 export function findTextEmails(text: string): string[] {
   const out: string[] = [];
-  for (const m of text.matchAll(TEXT_EMAIL_RE)) {
-    // Skip matches glued to a preceding address-ish character (e.g. part of a longer token).
-    const before = m.index > 0 ? text[m.index - 1] : "";
-    if (before && /[a-z0-9._%+-]/i.test(before)) continue;
-    const e = normalizeEmailCandidate(m[0]);
-    if (e) out.push(e);
+  // Only runs containing "@" can hold an address; this keeps the regex off long runs of other text.
+  for (const run of text.split(RUN_SEPARATOR_RE)) {
+    if (!run.includes("@")) continue;
+    for (const m of run.matchAll(TEXT_EMAIL_RE)) {
+      const before = run[m.index - 1];
+      const after = run[m.index + m[0].length];
+      if ((before !== undefined && GLUED_BEFORE.test(before)) || (after !== undefined && GLUED_AFTER.test(after))) continue;
+      const e = normalizeEmailCandidate(m[0]);
+      if (e) out.push(e);
+    }
   }
   return out;
 }
@@ -237,21 +251,31 @@ export function findTextEmails(text: string): string[] {
 // "name [at] domain [dot] com", "name (at) domain (dot) com", "{at}", "[arobase]", "(point)" (FR).
 const OPEN = String.raw`[\[\(\{<]`;
 const CLOSE = String.raw`[\]\)\}>]`;
-const AT_TOKEN = String.raw`\s*${OPEN}\s*(?:at|@|arobase)\s*${CLOSE}\s*`;
 const DOT_TOKEN = String.raw`(?:\s*${OPEN}\s*(?:dot|point)\s*${CLOSE}\s*|\.)`;
-const OBFUSCATED_RE = new RegExp(
-  String.raw`([a-z0-9._%+-]{1,64})${AT_TOKEN}([a-z0-9-]{1,63}(?:${DOT_TOKEN}[a-z0-9-]{1,63})+)`,
-  "gi",
-);
+const AT_MARK_RE = new RegExp(String.raw`${OPEN}\s*(?:at|@|arobase)\s*${CLOSE}`, "gi");
+/** Sticky: the domain right after an "[at]" marker. */
+const DOMAIN_AFTER_RE = new RegExp(String.raw`\s*([a-z0-9-]{1,63}(?:${DOT_TOKEN}[a-z0-9-]{1,63})+)`, "iy");
 const DOT_TOKEN_RE = new RegExp(String.raw`\s*${OPEN}\s*(?:dot|point)\s*${CLOSE}\s*`, "gi");
 
 /** Addresses written with "[at]" / "(at)" / "[dot]" style obfuscation. */
 export function findObfuscatedEmails(text: string): string[] {
   const out: string[] = [];
-  for (const m of text.matchAll(OBFUSCATED_RE)) {
-    const local = m[1]!;
-    const domain = m[2]!.replace(DOT_TOKEN_RE, ".");
-    const e = normalizeEmailCandidate(`${local}@${domain}`);
+  for (const m of text.matchAll(AT_MARK_RE)) {
+    // Local part: the address characters just before the marker (spaces allowed in between).
+    let end = m.index;
+    while (end > 0 && SPACE.test(text[end - 1]!)) end--;
+    let start = end;
+    while (start > 0 && end - start <= 64 && LOCAL_CHAR.test(text[start - 1]!)) start--;
+    const before = text[start - 1];
+    if (start === end || end - start > 64 || (before !== undefined && GLUED_BEFORE.test(before))) continue;
+
+    DOMAIN_AFTER_RE.lastIndex = m.index + m[0].length;
+    const d = DOMAIN_AFTER_RE.exec(text);
+    if (!d) continue;
+    const after = text[DOMAIN_AFTER_RE.lastIndex];
+    if (after !== undefined && GLUED_AFTER.test(after)) continue;
+
+    const e = normalizeEmailCandidate(`${text.slice(start, end)}@${d[1]!.replace(DOT_TOKEN_RE, ".")}`);
     if (e) out.push(e);
   }
   return out;

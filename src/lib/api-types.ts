@@ -200,7 +200,8 @@ export type ExportDto = {
   status: ExportStatus;
   rowCount: number | null;
   excludedRowCount: number | null;
-  excludedFields: { field: string; reason: string }[];
+  /** Columns withheld for some rows by source policy; `rows` = how many rows had that cell left empty. */
+  excludedFields: { field: string; reason: string; rows?: number }[];
   fileName: string | null;
   error: string | null;
   createdAt: string;
@@ -240,4 +241,21 @@ export type MeDto = {
   email: string;
   role: UserRole;
   status: UserStatus;
+};
+
+/** GET /api/v1/me — the signed-in user plus their limits and what this server offers. */
+export type MeResponse = MeDto & {
+  limits: {
+    maxResultsPerSearch: number;
+    /** Billable provider requests per calendar month (UTC). 0 = unlimited. */
+    monthlyRequestLimit: number;
+    /** Billable provider requests used since the 1st of this month (UTC). */
+    usedThisMonth: number;
+    /** Searches that may run at the same time. 0 = unlimited. */
+    maxConcurrentJobs: number;
+  };
+  /** No Google key configured: searches use generated sample data. */
+  sampleMode: boolean;
+  aiAvailable: boolean;
+  providers: { id: SourceId; label: string; isSample: boolean }[];
 };
