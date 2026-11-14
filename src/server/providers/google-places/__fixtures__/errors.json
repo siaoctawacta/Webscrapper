@@ -1,0 +1,79 @@
+{
+  "apiKeyInvalid": {
+    "error": {
+      "code": 400,
+      "message": "API key not valid. Please pass a valid API key.",
+      "status": "INVALID_ARGUMENT",
+      "details": [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "API_KEY_INVALID",
+          "domain": "googleapis.com",
+          "metadata": {
+            "service": "places.googleapis.com"
+          }
+        }
+      ]
+    }
+  },
+  "serviceDisabled": {
+    "error": {
+      "code": 403,
+      "message": "Places API (New) has not been used in project 123456789012 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/places.googleapis.com/overview?project=123456789012 then retry.",
+      "status": "PERMISSION_DENIED",
+      "details": [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "SERVICE_DISABLED",
+          "domain": "googleapis.com",
+          "metadata": {
+            "consumer": "projects/123456789012",
+            "service": "places.googleapis.com"
+          }
+        }
+      ]
+    }
+  },
+  "billingDisabled": {
+    "error": {
+      "code": 403,
+      "message": "This API method requires billing to be enabled. Please enable billing on project #123456789012 by visiting https://console.developers.google.com/billing/enable?project=123456789012 then retry.",
+      "status": "PERMISSION_DENIED",
+      "details": [
+        {
+          "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+          "reason": "BILLING_DISABLED",
+          "domain": "googleapis.com"
+        }
+      ]
+    }
+  },
+  "invalidArgument": {
+    "error": {
+      "code": 400,
+      "message": "Invalid value at 'location_restriction.rectangle.low.latitude' (TYPE_DOUBLE), \"north\"",
+      "status": "INVALID_ARGUMENT"
+    }
+  },
+  "quota": {
+    "error": {
+      "code": 429,
+      "message": "Quota exceeded for quota metric 'SearchTextRequest' and limit 'SearchTextRequest per minute' of service 'places.googleapis.com' for consumer 'project_number:123456789012'.",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  },
+  "internal": {
+    "error": {
+      "code": 500,
+      "message": "Internal error encountered.",
+      "status": "INTERNAL"
+    }
+  },
+  "notFound": {
+    "error": {
+      "code": 404,
+      "message": "The place ID is no longer valid.",
+      "status": "NOT_FOUND"
+    }
+  }
+}

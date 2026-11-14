@@ -1,0 +1,348 @@
+{
+  "places": [
+    {
+      "id": "ChIJqDPhgNXe3TFdUH4t2KKLEor",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue Sylvanus Olympio, Bè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue Sylvanus Olympio",
+          "shortText": "Avenue Sylvanus Olympio",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Bè",
+          "shortText": "Bè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1318,
+        "longitude": 1.2611
+      },
+      "rating": 3.4,
+      "userRatingCount": 1670,
+      "googleMapsUri": "https://maps.google.com/?cid=8035981808604504974",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Sarakawa Plage Bar",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 93 84 92",
+      "internationalPhoneNumber": "+228 22 93 84 92",
+      "websiteUri": "https://www.sarakawa-plage-bar.example/"
+    },
+    {
+      "id": "ChIJdFjibofEAgHKdH3ae0f22I4",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Adidogomé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Adidogomé",
+          "shortText": "Adidogomé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1300674,
+        "longitude": 1.2556815
+      },
+      "rating": 3.7,
+      "userRatingCount": 1165,
+      "googleMapsUri": "https://maps.google.com/?cid=5684738321909217488",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Sarakawa",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "79 96 19 27",
+      "internationalPhoneNumber": "+228 79 96 19 27",
+      "websiteUri": "https://www.hotel-sarakawa.example/"
+    },
+    {
+      "id": "ChIJCObzXn6sflUo4_ZGBkk6tC9",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du 13 Janvier, Agbalépédo, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du 13 Janvier",
+          "shortText": "Boulevard du 13 Janvier",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Agbalépédo",
+          "shortText": "Agbalépédo",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1402,
+        "longitude": 1.249
+      },
+      "rating": 3.9,
+      "userRatingCount": 324,
+      "googleMapsUri": "https://maps.google.com/?cid=8475465508834397353",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Résidence Sarakawa Annexe",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 23 18 29",
+      "internationalPhoneNumber": "+228 22 23 18 29",
+      "websiteUri": "https://www.residence-sarakawa-annexe.example/"
+    },
+    {
+      "id": "ChIJnsjrpTxPrShrNoNnieY4EI2",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Rue Aniko Palako, Adidogomé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Rue Aniko Palako",
+          "shortText": "Rue Aniko Palako",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Adidogomé",
+          "shortText": "Adidogomé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1295,
+        "longitude": 1.2549
+      },
+      "rating": 3.3,
+      "userRatingCount": 1749,
+      "googleMapsUri": "https://maps.google.com/?cid=1518723310295173468",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Le Lagon Bleu",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 64 47 98",
+      "internationalPhoneNumber": "+228 22 64 47 98",
+      "websiteUri": "https://www.hotel-le-lagon-bleu.example/"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "id": "ChIJc76SJQn0nuzZL3_Jrg0fzr5",
+  "types": [
+    "hotel",
+    "lodging",
+    "point_of_interest",
+    "establishment"
+  ],
+  "formattedAddress": "Avenue de la Libération, Kodjoviakopé, Lomé, Togo",
+  "addressComponents": [
+    {
+      "longText": "Avenue de la Libération",
+      "shortText": "Avenue de la Libération",
+      "types": [
+        "route"
+      ],
+      "languageCode": "fr"
+    },
+    {
+      "longText": "Kodjoviakopé",
+      "shortText": "Kodjoviakopé",
+      "types": [
+        "sublocality_level_1",
+        "sublocality",
+        "political"
+      ],
+      "languageCode": "fr"
+    },
+    {
+      "longText": "Lomé",
+      "shortText": "Lomé",
+      "types": [
+        "locality",
+        "political"
+      ],
+      "languageCode": "fr"
+    },
+    {
+      "longText": "Golfe",
+      "shortText": "Golfe",
+      "types": [
+        "administrative_area_level_2",
+        "political"
+      ],
+      "languageCode": "fr"
+    },
+    {
+      "longText": "Région Maritime",
+      "shortText": "Région Maritime",
+      "types": [
+        "administrative_area_level_1",
+        "political"
+      ],
+      "languageCode": "fr"
+    },
+    {
+      "longText": "Togo",
+      "shortText": "TG",
+      "types": [
+        "country",
+        "political"
+      ],
+      "languageCode": "fr"
+    }
+  ],
+  "location": {
+    "latitude": 6.1843733,
+    "longitude": 1.2564969
+  },
+  "rating": 3.6,
+  "userRatingCount": 279,
+  "googleMapsUri": "https://maps.google.com/?cid=1812685217196692624",
+  "businessStatus": "OPERATIONAL",
+  "displayName": {
+    "text": "Hôtel Le Lagon Bleu",
+    "languageCode": "fr"
+  },
+  "primaryType": "hotel",
+  "primaryTypeDisplayName": {
+    "text": "Hotel",
+    "languageCode": "en"
+  },
+  "nationalPhoneNumber": "92 77 48 57",
+  "internationalPhoneNumber": "+228 92 77 48 57",
+  "websiteUri": "https://www.hotel-le-lagon-bleu.example/"
+}

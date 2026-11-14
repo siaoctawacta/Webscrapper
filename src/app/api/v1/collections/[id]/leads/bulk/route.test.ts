@@ -1,0 +1,254 @@
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { and, eq } from "drizzle-orm";
+import type { ApiError } from "@/lib/api-types";
+import type { LeadStatus } from "@/lib/domain";
+import { closeDb, db } from "@/server/db";
+import { auditLogs, businesses, leads, type Lead } from "@/server/db/schema";
+import type { AppUser } from "@/server/auth/session";
+import { addToCollection, createCollection } from "@/server/collections";
+import { apiRequest, createTestUser, ctx, googleSpec, insertJob, insertResults, resetDb, sampleSpec, type TestUser } from "@/server/collections/test-fixtures";
+import { POST } from "./route";
+
+beforeEach(resetDb);
+afterAll(closeDb);
+
+const appUser = (u: TestUser): AppUser => ({ id: u.id, email: u.email, name: "Test", role: "member", status: "active" });
+
+async function seed(n = 4) {
+  const user = await createTestUser();
+  const u = appUser(user);
+  const source = await createCollection(u, { name: "Source" });
+  const target = await createCollection(u, { name: "Target" });
+  const job = await insertJob(user.id);
+  const results = await insertResults(
+    job,
+    Array.from({ length: n }, (_, i) => (i % 2 ? sampleSpec(i + 1) : googleSpec(i + 1, { websiteStatus: i === 0 ? "none" : "present" }))),
+  );
+  await addToCollection(u, source.id, { jobId: job.id, resultIds: results.map((r) => r.id) });
+  const rows = await db().select().from(leads).where(eq(leads.collectionId, source.id)).orderBy(leads.createdAt);
+  return { user, u, source, target, job, results, leads: rows.reverse() }; // in display order (newest first)
+}
+
+const bulk = (user: TestUser, collectionId: string, body: unknown) =>
+  POST(apiRequest(`/api/v1/collections/${collectionId}/leads/bulk`, { method: "POST", body, user }), ctx({ id: collectionId }));
+
+const leadsIn = (collectionId: string) => db().select().from(leads).where(eq(leads.collectionId, collectionId));
+const byId = async (id: string): Promise<Lead> => (await db().select().from(leads).where(eq(leads.id, id)))[0]!;
+
+describe("bulk lead actions", () => {
+  it("set_status updates only selected leads of this collection and stamps last contacted", async () => {
+    const { user, source, leads: ls } = await seed();
+    const outsider = await seed(1); // another user's lead id in the payload is ignored
+    const res = await bulk(user, source.id, { leadIds: [ls[0]!.id, ls[1]!.id, outsider.leads[0]!.id], action: "set_status", status: "contacted" });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ affected: 2 });
+    expect((await byId(ls[0]!.id)).status).toBe("contacted");
+    expect((await byId(ls[0]!.id)).lastContactedAt).not.toBeNull();
+    expect((await byId(ls[2]!.id)).status).toBe("new");
+    expect((await byId(outsider.leads[0]!.id)).status).toBe("new");
+
+    const won = await bulk(user, source.id, { leadIds: [ls[2]!.id], action: "set_status", status: "won" });
+    expect(await won.json()).toEqual({ affected: 1 });
+    expect((await byId(ls[2]!.id)).lastContactedAt).toBeNull();
+
+    const [a] = await db().select().from(auditLogs).where(eq(auditLogs.action, "collection.bulk"));
+    expect(a!.metadata).toMatchObject({ action: "set_status", selector: "ids", requested: 3, affected: 2, status: "contacted" });
+  });
+
+  it("add_tags merges case-insensitively, keeps existing casing and order, caps at 30", async () => {
+    const { user, source, leads: ls } = await seed();
+    await db().update(leads).set({ tags: ["VIP", "Lomé"] }).where(eq(leads.id, ls[0]!.id));
+    const filler = Array.from({ length: 29 }, (_, i) => `t${i}`);
+    await db().update(leads).set({ tags: filler }).where(eq(leads.id, ls[1]!.id));
+
+    const res = await bulk(user, source.id, { leadIds: [ls[0]!.id, ls[1]!.id], action: "add_tags", tags: ["vip", " Hot   lead ", "LOMÉ", "New"] });
+    expect(await res.json()).toEqual({ affected: 2 });
+    expect((await byId(ls[0]!.id)).tags).toEqual(["VIP", "Lomé", "Hot lead", "New"]);
+    expect((await byId(ls[1]!.id)).tags).toEqual([...filler, "vip"]);
+
+    const tooLong = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "add_tags", tags: ["y".repeat(41)] });
+    expect(tooLong.status).toBe(422);
+    const empty = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "add_tags", tags: ["  "] });
+    expect(empty.status).toBe(422);
+  });
+
+  it("remove_tags removes case-insensitively; replace_tags replaces (or clears)", async () => {
+    const { user, source, leads: ls } = await seed();
+    await db().update(leads).set({ tags: ["VIP", "Lomé", "Hot lead"] }).where(eq(leads.id, ls[0]!.id));
+    await db().update(leads).set({ tags: ["vip"] }).where(eq(leads.id, ls[1]!.id));
+
+    expect(await (await bulk(user, source.id, { leadIds: [ls[0]!.id, ls[1]!.id], action: "remove_tags", tags: ["vip", "hot  LEAD"] })).json()).toEqual({ affected: 2 });
+    expect((await byId(ls[0]!.id)).tags).toEqual(["Lomé"]);
+    expect((await byId(ls[1]!.id)).tags).toEqual([]);
+
+    await bulk(user, source.id, { leadIds: [ls[0]!.id, ls[2]!.id], action: "replace_tags", tags: ["Accra", "accra", "Follow up"] });
+    expect((await byId(ls[0]!.id)).tags).toEqual(["Accra", "Follow up"]);
+    expect((await byId(ls[2]!.id)).tags).toEqual(["Accra", "Follow up"]);
+
+    await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "replace_tags", tags: [] });
+    expect((await byId(ls[0]!.id)).tags).toEqual([]);
+
+    // Accented capitals are matched case-insensitively too.
+    await db().update(leads).set({ tags: ["Lomé", "Été 2026", "Keep"] }).where(eq(leads.id, ls[3]!.id));
+    await bulk(user, source.id, { leadIds: [ls[3]!.id], action: "remove_tags", tags: ["LOMÉ", "été 2026"] });
+    expect((await byId(ls[3]!.id)).tags).toEqual(["Keep"]);
+  });
+
+  it("selects by query (filters on business and lead columns)", async () => {
+    const { user, source, leads: ls } = await seed();
+    await db().update(leads).set({ tags: ["VIP"] }).where(eq(leads.id, ls[3]!.id));
+    // has_website=false matches only the first Google row (website_status none).
+    const res = await bulk(user, source.id, { query: { filters: { has_website: false } }, action: "set_status", status: "qualified" });
+    expect(await res.json()).toEqual({ affected: 1 });
+    const qualified = (await leadsIn(source.id)).filter((l) => l.status === ("qualified" as LeadStatus));
+    expect(qualified).toHaveLength(1);
+
+    const tagged = await bulk(user, source.id, { query: { filters: { untagged: true } }, action: "add_tags", tags: ["Batch 1"] });
+    expect(await tagged.json()).toEqual({ affected: 3 });
+    expect((await byId(ls[3]!.id)).tags).toEqual(["VIP"]);
+
+    const bad = await bulk(user, source.id, { query: { filters: { nope: true } }, action: "remove" });
+    expect(bad.status).toBe(422);
+  });
+
+  it("copy_to keeps annotations and skips leads already in the target", async () => {
+    const { user, u, source, target, job, results, leads: ls } = await seed();
+    await db().update(leads).set({ status: "replied", tags: ["VIP"], notes: "Call back", lastContactedAt: new Date("2026-11-01T00:00:00Z") }).where(eq(leads.id, ls[0]!.id));
+    // One business already in the target.
+    const alreadyResult = results.find((r) => r.sourceRecordId === "sample-2")!;
+    await addToCollection(u, target.id, { jobId: job.id, resultIds: [alreadyResult.id] });
+
+    const res = await bulk(user, source.id, { leadIds: ls.map((l) => l.id), action: "copy_to", targetCollectionId: target.id });
+    expect(await res.json()).toEqual({ affected: 3, skipped: 1 });
+    expect(await leadsIn(source.id)).toHaveLength(4);
+    const tgt = await leadsIn(target.id);
+    expect(tgt).toHaveLength(4);
+    const copied = tgt.find((l) => l.businessId === ls[0]!.businessId)!;
+    expect(copied).toMatchObject({ status: "replied", tags: ["VIP"], notes: "Call back", userId: user.id });
+    expect(copied.lastContactedAt?.toISOString()).toBe("2026-11-01T00:00:00.000Z");
+    expect(copied.id).not.toBe(ls[0]!.id);
+    // Business records are shared, not duplicated.
+    expect(await db().select().from(businesses)).toHaveLength(4);
+  });
+
+  it("move_to moves copied and already-present leads, leaving the rest", async () => {
+    const { user, u, source, target, job, results, leads: ls } = await seed();
+    // Display order: ls[0] google-1, ls[1] sample-2, ls[2] google-3, ls[3] sample-4. sample-2 is already in the target.
+    const srid = new Map((await db().select().from(businesses)).map((b) => [b.id, b.sourceRecordId]));
+    expect(ls.map((l) => srid.get(l.businessId))).toEqual(["ChIJgoogle1", "sample-2", "ChIJgoogle3", "sample-4"]);
+    await addToCollection(u, target.id, { jobId: job.id, resultIds: [results[1]!.id] });
+    const [existing] = await leadsIn(target.id);
+    await db().update(leads).set({ status: "won", notes: "Target notes" }).where(eq(leads.id, existing!.id));
+    await db().update(leads).set({ status: "replied", tags: ["VIP"], notes: "Source notes" }).where(eq(leads.id, ls[0]!.id));
+
+    const res = await bulk(user, source.id, { leadIds: ls.slice(0, 3).map((l) => l.id), action: "move_to", targetCollectionId: target.id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ affected: 3, skipped: 1 });
+
+    expect((await leadsIn(source.id)).map((l) => l.id)).toEqual([ls[3]!.id]);
+    const tgt = await leadsIn(target.id);
+    expect(tgt).toHaveLength(3);
+    // The lead already in the target keeps the target's annotations; moved leads keep theirs.
+    expect(tgt.find((l) => l.id === existing!.id)).toMatchObject({ status: "won", notes: "Target notes" });
+    expect(tgt.find((l) => l.businessId === ls[0]!.businessId)).toMatchObject({ status: "replied", tags: ["VIP"], notes: "Source notes" });
+    // Business records are kept (still used by the target).
+    expect(await db().select().from(businesses)).toHaveLength(4);
+
+    const [a] = await db().select().from(auditLogs).where(eq(auditLogs.action, "collection.bulk"));
+    expect(a!.metadata).toMatchObject({ action: "move_to", selector: "ids", affected: 3, skipped: 1, targetCollectionId: target.id });
+  });
+
+  it("move_to by query moves every matching lead; nothing selected is a no-op", async () => {
+    const { user, source, target, leads: ls } = await seed();
+    await db().update(leads).set({ tags: ["Batch"] }).where(eq(leads.id, ls[2]!.id));
+    const res = await bulk(user, source.id, { query: { filters: { tag: ["batch"] } }, action: "move_to", targetCollectionId: target.id });
+    // Tag filter is exact (case-sensitive array overlap): nothing matches "batch".
+    expect(await res.json()).toEqual({ affected: 0, skipped: 0 });
+    const res2 = await bulk(user, source.id, { query: { filters: { tag: ["Batch"] } }, action: "move_to", targetCollectionId: target.id });
+    expect(await res2.json()).toEqual({ affected: 1, skipped: 0 });
+    expect((await leadsIn(target.id)).map((l) => l.businessId)).toEqual([ls[2]!.businessId]);
+    expect(await leadsIn(source.id)).toHaveLength(3);
+
+    // Ids that are not in this collection (e.g. already moved) change nothing.
+    const again = await bulk(user, source.id, { leadIds: [ls[2]!.id], action: "move_to", targetCollectionId: target.id });
+    expect(await again.json()).toEqual({ affected: 0, skipped: 0 });
+  });
+
+  it("copy_to into a collection that already has every lead copies nothing", async () => {
+    const { user, source, target, leads: ls } = await seed(2);
+    await bulk(user, source.id, { leadIds: ls.map((l) => l.id), action: "copy_to", targetCollectionId: target.id });
+    const again = await bulk(user, source.id, { leadIds: ls.map((l) => l.id), action: "copy_to", targetCollectionId: target.id });
+    expect(await again.json()).toEqual({ affected: 0, skipped: 2 });
+    expect(await leadsIn(target.id)).toHaveLength(2);
+    expect(await leadsIn(source.id)).toHaveLength(2);
+  });
+
+  it("copy/move require another collection owned by the user", async () => {
+    const { user, source, leads: ls } = await seed();
+    const other = await seed(1);
+    const same = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "move_to", targetCollectionId: source.id });
+    expect(same.status).toBe(422);
+    const foreign = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "copy_to", targetCollectionId: other.target.id });
+    expect(foreign.status).toBe(404);
+    expect(((await foreign.json()) as ApiError).error.message).toBe("Collection not found");
+    const missing = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "copy_to" });
+    expect(missing.status).toBe(422);
+    expect(await leadsIn(source.id)).toHaveLength(4);
+  });
+
+  it("remove deletes selected leads and orphaned business records only", async () => {
+    const { user, u, source, target, job, results, leads: ls } = await seed();
+    // Lead 0's business is also in the target, so its record must survive.
+    const shared = results.find((r) => r.sourceRecordId === "ChIJgoogle1")!;
+    await addToCollection(u, target.id, { jobId: job.id, resultIds: [shared.id] });
+    const res = await bulk(user, source.id, { leadIds: ls.map((l) => l.id), action: "remove" });
+    expect(await res.json()).toEqual({ affected: 4 });
+    expect(await leadsIn(source.id)).toHaveLength(0);
+    const left = await db().select().from(businesses);
+    expect(left.map((b) => b.sourceRecordId)).toEqual(["ChIJgoogle1"]);
+  });
+
+  it("is scoped to the owner: another user's collection is 404", async () => {
+    const { source, leads: ls } = await seed();
+    const intruder = await createTestUser();
+    const res = await bulk(intruder, source.id, { leadIds: [ls[0]!.id], action: "remove" });
+    expect(res.status).toBe(404);
+    expect(await leadsIn(source.id)).toHaveLength(4);
+  });
+
+  it("validates the body", async () => {
+    const { user, source, leads: ls } = await seed();
+    expect((await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "explode" })).status).toBe(422);
+    expect((await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "set_status" })).status).toBe(422);
+    expect((await bulk(user, source.id, { action: "remove" })).status).toBe(422);
+    expect((await bulk(user, source.id, { leadIds: [ls[0]!.id], query: {}, action: "remove" })).status).toBe(422);
+    expect((await bulk(user, source.id, { leadIds: ["not-a-uuid"], action: "remove" })).status).toBe(422);
+    const rows = await db().select().from(leads).where(and(eq(leads.collectionId, source.id), eq(leads.status, "new")));
+    expect(rows).toHaveLength(4);
+  });
+
+  it("query selectors respect search and ignore the page/pageSize of the grid", async () => {
+    const { user, source } = await seed(4);
+    const res = await bulk(user, source.id, { query: { page: 3, pageSize: 25, sort: [{ field: "business_name", direction: "asc" }], filters: {}, search: "sample biz" }, action: "add_tags", tags: ["Sample"] });
+    expect(await res.json()).toEqual({ affected: 2 });
+    expect((await leadsIn(source.id)).filter((l) => l.tags.includes("Sample"))).toHaveLength(2);
+  });
+
+  it("is rate limited to 30 bulk requests per minute", async () => {
+    const { user, source, leads: ls } = await seed(1);
+    let ok = 0;
+    let limited: Response | null = null;
+    // A minute boundary can reset the window once mid-loop, so allow up to two windows.
+    for (let i = 0; i < 62 && !limited; i++) {
+      const res = await bulk(user, source.id, { leadIds: [ls[0]!.id], action: "set_status", status: "new" });
+      if (res.status === 429) limited = res;
+      else {
+        expect(res.status).toBe(200);
+        ok++;
+      }
+    }
+    expect(limited).not.toBeNull();
+    expect(ok).toBeGreaterThanOrEqual(30);
+    expect(((await limited!.json()) as ApiError).error.code).toBe("rate_limited");
+  });
+});
