@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { FolderPlus, Plus } from "lucide-react";
@@ -31,23 +32,26 @@ export type SaveToCollectionProps = {
   onSaved?: () => void;
 };
 
-export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, query, count, resolveIds, onSaved }: SaveToCollectionProps) {
+export function SaveToCollectionDialog(props: SaveToCollectionProps) {
+  return (
+    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
+      <DialogContent size="sm">
+        {/* Mounted only while open, so its form state starts fresh each time. */}
+        <SaveToCollectionBody {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SaveToCollectionBody({ onOpenChange, jobId, resultIds, query, count, resolveIds, onSaved }: SaveToCollectionProps) {
+  const router = useRouter();
   const qc = useQueryClient();
   const collections = useCollections();
   const [selected, setSelected] = React.useState<string | null>(null);
-  const [creating, setCreating] = React.useState(false);
+  const [creatingChosen, setCreating] = React.useState(false);
   const [name, setName] = React.useState("");
-
-  React.useEffect(() => {
-    if (open) {
-      setCreating(false);
-      setName("");
-      setSelected(null);
-    }
-  }, [open]);
-  React.useEffect(() => {
-    if (open && collections.data && collections.data.collections.length === 0) setCreating(true);
-  }, [open, collections.data]);
+  // With no collections yet, the only option is to create one.
+  const creating = creatingChosen || collections.data?.collections.length === 0;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -68,7 +72,7 @@ export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, q
       qc.invalidateQueries({ queryKey: ["collections"] });
       toast.success(`Saved ${formatNumber(r.added)} ${r.added === 1 ? "lead" : "leads"} to “${r.name}”`, {
         description: r.skipped ? `${formatNumber(r.skipped)} were already in it.` : undefined,
-        action: { label: "Open", onClick: () => (window.location.href = `/collections/${r.id}`) },
+        action: { label: "Open", onClick: () => router.push(`/collections/${r.id}`) },
       });
       onSaved?.();
       onOpenChange(false);
@@ -79,8 +83,7 @@ export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, q
   const canSave = creating ? name.trim().length > 0 : selected !== null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="sm">
+    <>
         <DialogHeader>
           <DialogTitle>Save to collection</DialogTitle>
           <DialogDescription>
@@ -135,7 +138,6 @@ export function SaveToCollectionDialog({ open, onOpenChange, jobId, resultIds, q
         <p className="text-xs text-muted-foreground">
           Manage collections on the <Link href="/collections" className="text-accent hover:underline">Collections</Link> page.
         </p>
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }

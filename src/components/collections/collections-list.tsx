@@ -40,24 +40,17 @@ function StatusBar({ c }: { c: CollectionDto }) {
   );
 }
 
-export function CollectionFormDialog({
-  open,
-  onOpenChange,
-  initial,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  initial?: CollectionDto | null;
-}) {
+type CollectionFormProps = { open: boolean; onOpenChange: (o: boolean) => void; initial?: CollectionDto | null };
+
+/** Remounts the form each time it opens so fields start from the collection's current values. */
+export function CollectionFormDialog(props: CollectionFormProps) {
+  return <CollectionFormDialogInner key={props.open ? `open-${props.initial?.id ?? "new"}` : "closed"} {...props} />;
+}
+
+function CollectionFormDialogInner({ open, onOpenChange, initial }: CollectionFormProps) {
   const qc = useQueryClient();
-  const [name, setName] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  React.useEffect(() => {
-    if (open) {
-      setName(initial?.name ?? "");
-      setDescription(initial?.description ?? "");
-    }
-  }, [open, initial]);
+  const [name, setName] = React.useState(initial?.name ?? "");
+  const [description, setDescription] = React.useState(initial?.description ?? "");
   const save = useMutation({
     mutationFn: () =>
       initial

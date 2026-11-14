@@ -60,21 +60,20 @@ function triggerDownload(url: string) {
   a.remove();
 }
 
+/** Remounts the dialog body each time it opens so choices start from the current grid state. */
 export function ExportDialog(props: ExportDialogProps) {
+  return <ExportDialogInner key={props.open ? "open" : "closed"} {...props} />;
+}
+
+function ExportDialogInner(props: ExportDialogProps) {
   const { open, onOpenChange, context, visibleColumns, total, pageRowCount, selectedCount, policies } = props;
   const [format, setFormat] = React.useState<ExportFormat>("xlsx");
   const [scope, setScope] = React.useState<ExportScope>(props.defaultScope ?? (selectedCount > 0 ? "selected" : "filtered"));
-  const [columns, setColumns] = React.useState<FieldKey[]>(visibleColumns);
+  const [columns, setColumns] = React.useState<FieldKey[]>(() => visibleColumns.filter((c) => FIELDS[c].contexts.includes(context)));
   const [includeAnnotations, setIncludeAnnotations] = React.useState(true);
   const abortRef = React.useRef<AbortController | null>(null);
-
-  React.useEffect(() => {
-    if (open) {
-      setColumns(visibleColumns.filter((c) => FIELDS[c].contexts.includes(context)));
-      setScope(props.defaultScope ?? (selectedCount > 0 ? "selected" : "filtered"));
-    } else abortRef.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  // Stop polling for a queued export when the dialog closes.
+  React.useEffect(() => () => abortRef.current?.abort(), []);
 
   const allColumns = fieldsFor(context);
   const nonExportable = new Set((policies ?? []).flatMap((p) => p.nonExportableFields));

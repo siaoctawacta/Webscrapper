@@ -32,6 +32,8 @@ export async function api<T>(path: string, init: RequestInit & { json?: unknown 
   const data = text ? (JSON.parse(text) as unknown) : undefined;
   if (!res.ok) {
     const err = (data as ApiError | undefined)?.error;
+    // Session expired: a full page load (not client navigation) clears all cached private data.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     if (res.status === 401 && typeof window !== "undefined") window.location.href = "/sign-in";
     throw new ApiClientError(res.status, err?.code ?? "internal", err?.message ?? `Request failed (${res.status})`, err?.details);
   }

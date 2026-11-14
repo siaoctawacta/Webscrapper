@@ -44,8 +44,6 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
     placeholderData: keepPreviousData,
   });
 
-  const filterKey = JSON.stringify([query.filters, query.search, query.sort]);
-  React.useEffect(() => setSelection(emptySelection()), [filterKey]);
 
   /** Replace one row in the cached page after an inline edit (no refetch → no live re-hydration cost). */
   const patchRow = React.useCallback(
@@ -300,7 +298,7 @@ function LeadPanel({ row, suggestions, onUpdated }: { row: BusinessRow; suggesti
       </div>
       <div className="grid gap-1.5">
         <Label>Notes</Label>
-        <LeadNotesEditor row={row} onUpdated={onUpdated} />
+        <LeadNotesEditor key={row.id} row={row} onUpdated={onUpdated} />
       </div>
     </section>
   );
