@@ -10,7 +10,6 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Lets several dev servers run side by side (e.g. parallel agents, e2e) without sharing build output.
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  output: "standalone",
   serverExternalPackages: ["pg", "pg-boss", "exceljs", "cheerio"],
   poweredByHeader: false,
   async headers() {
