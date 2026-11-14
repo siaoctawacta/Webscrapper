@@ -79,3 +79,13 @@ describe("disabled accounts", () => {
     expect(await res.text()).toMatch(/disabled/i);
   });
 });
+
+describe("phone display", () => {
+  it("shows valid numbers internationally and keeps others as provided", async () => {
+    const { displayPhone } = await import("@/server/rows");
+    expect(displayPhone("92 38 67 38", "+22892386738")).toBe("+228 92 38 67 38");
+    expect(displayPhone("+233 24 123 4567", "+233241234567")).toBe("+233 24 123 4567");
+    expect(displayPhone("12", null)).toBe("12");
+    expect(displayPhone(null, null)).toBeNull();
+  });
+});

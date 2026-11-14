@@ -52,6 +52,8 @@ async function waitForReady(id: string, signal: AbortSignal): Promise<ExportDto>
 function triggerDownload(url: string) {
   const a = document.createElement("a");
   a.href = url;
+  // Same-origin download: an empty download attribute lets the server's Content-Disposition name the file.
+  a.setAttribute("download", "");
   a.rel = "noopener";
   document.body.appendChild(a);
   a.click();

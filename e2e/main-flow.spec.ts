@@ -34,7 +34,7 @@ test("search → sort → filter → save → tag → proposal → export", asyn
 
   // Results page fills in and completes.
   await page.waitForURL(/\/searches\/[0-9a-f-]{36}/);
-  await expect(page.getByText(/^Completed$/).first()).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByText(/Found the \d+ results you asked for/)).toBeVisible({ timeout: 90_000 });
   const table = page.getByRole("table");
   await expect(table.getByRole("row").nth(1)).toBeVisible();
 

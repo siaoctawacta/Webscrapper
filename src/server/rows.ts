@@ -1,9 +1,19 @@
 import "server-only";
 import type { BusinessRow } from "@/lib/api-types";
 import { isFieldKey, type FieldKey } from "@/lib/fields";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import type { Business, Lead, SearchResult } from "./db/schema";
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
+
+/** Valid numbers are shown in international format ("+228 92 38 67 38"); others exactly as provided. */
+export function displayPhone(raw: string | null, e164: string | null): string | null {
+  if (e164) {
+    const p = parsePhoneNumberFromString(e164);
+    if (p?.isValid()) return p.formatInternational();
+  }
+  return raw ?? e164;
+}
 
 type BusinessLike = SearchResult | Business;
 
@@ -14,7 +24,7 @@ function base(r: BusinessLike): Omit<BusinessRow, "id" | "duplicateOfId" | "rest
     name: r.name,
     category: r.category,
     categories: r.categories,
-    phone: r.phoneRaw ?? r.phoneE164,
+    phone: displayPhone(r.phoneRaw, r.phoneE164),
     phoneE164: r.phoneE164,
     phoneStatus: r.phoneStatus,
     website: r.websiteUrl,
