@@ -10,7 +10,6 @@ export const SENDER_TEXT_MAX = 200;
 export const SIGNATURE_MAX = 1000;
 
 // Control characters (except tab/newline) are never useful here and NUL breaks Postgres text.
-// eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 const clean = (v: string) => v.replace(/\r\n?/g, "\n").replace(CONTROL_CHARS, "");
 

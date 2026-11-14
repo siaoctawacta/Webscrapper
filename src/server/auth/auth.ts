@@ -70,6 +70,17 @@ function createAuth() {
       },
     },
     databaseHooks: {
+      session: {
+        create: {
+          // Disabled accounts cannot sign in at all (pending accounts may, to see the "awaiting approval" page).
+          before: async (sess) => {
+            const [row] = await db().select({ status: user.status }).from(user).where(eq(user.id, sess.userId)).limit(1);
+            if (row?.status === "disabled") {
+              throw new APIError("FORBIDDEN", { message: "Your account is disabled. Contact your administrator." });
+            }
+          },
+        },
+      },
       user: {
         create: {
           before: async (u) => {

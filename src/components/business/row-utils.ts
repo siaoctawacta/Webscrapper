@@ -81,13 +81,16 @@ export function isEmptyValue(v: unknown): boolean {
   return false;
 }
 
-/** True when the source policy withheld this field and no live value was loaded for this view. */
+/**
+ * True when the source policy withheld this field and nothing was loaded live for this view.
+ * (A field that was loaded live but is empty is genuinely missing, not "not stored".)
+ */
 export function isRestricted(row: BusinessRow, key: FieldKey): boolean {
-  return row.restrictedFields.includes(key) && isEmptyValue(fieldValue(row, key));
+  return row.restrictedFields.includes(key) && !row.liveFields.includes(key) && isEmptyValue(fieldValue(row, key));
 }
 
-/** True when the value was loaded live from the provider for this view (not stored). */
-export const isLive = (row: BusinessRow, key: FieldKey): boolean => row.liveFields.includes(key);
+/** True when a value is shown that was loaded live from the provider for this view (not stored). */
+export const isLive = (row: BusinessRow, key: FieldKey): boolean => row.liveFields.includes(key) && !isEmptyValue(fieldValue(row, key));
 
 export function policyFor(policies: readonly SourcePolicyInfo[] | undefined, source: SourceId): SourcePolicyInfo | undefined {
   return policies?.find((p) => p.source === source);

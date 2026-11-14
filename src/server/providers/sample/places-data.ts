@@ -20,6 +20,8 @@ export interface CountryDef {
   addressStyle: AddressStyle;
   /** Owner first names used in names like "Chez Afi" or "Kwame's Kitchen". */
   firstNames: string[];
+  /** Family names used in names like "Pharmacie Agbeko" or "Mensah & Sons Motors". */
+  lastNames: string[];
   /** Local word of welcome used in some names ("Woezon", "Akwaaba"…). */
   welcome?: string;
   /** Postal abbreviation for US/CA addresses. */
@@ -49,35 +51,50 @@ export interface CityDef {
 
 export const COUNTRIES: Record<string, CountryDef> = {
   TG: { code: "TG", name: "Togo", aliases: ["togo", "republique togolaise"], language: "fr", flavor: "africa", addressStyle: "africa", welcome: "Woezon",
-    firstNames: ["Kossi", "Komlan", "Afi", "Ama", "Yao", "Kodjo", "Akossiwa", "Mawuli", "Séna", "Edem", "Abla", "Essi", "Dodji", "Elom", "Kafui", "Yawa"] },
+    firstNames: ["Kossi", "Komlan", "Afi", "Ama", "Yao", "Kodjo", "Akossiwa", "Mawuli", "Séna", "Edem", "Abla", "Essi", "Dodji", "Elom", "Kafui", "Yawa"],
+    lastNames: ["Agbeko", "Mensah", "Amegah", "Kpodar", "Lawson", "Adjovi", "Dossou", "Akakpo", "Gbadoe", "Attiogbe", "Tchalla", "Bawa", "Amouzou", "Kodjovi"] },
   GH: { code: "GH", name: "Ghana", aliases: ["ghana"], language: "en", flavor: "africa", addressStyle: "africa", welcome: "Akwaaba",
-    firstNames: ["Kwame", "Ama", "Kofi", "Akosua", "Yaw", "Abena", "Kwabena", "Efua", "Kojo", "Esi", "Kwesi", "Adwoa", "Nana", "Kweku", "Afua"] },
+    firstNames: ["Kwame", "Ama", "Kofi", "Akosua", "Yaw", "Abena", "Kwabena", "Efua", "Kojo", "Esi", "Kwesi", "Adwoa", "Nana", "Kweku", "Afua"],
+    lastNames: ["Mensah", "Owusu", "Boateng", "Asante", "Osei", "Appiah", "Agyeman", "Ansah", "Addo", "Quaye", "Tetteh", "Darko", "Ofori", "Amponsah"] },
   BJ: { code: "BJ", name: "Bénin", aliases: ["benin", "republique du benin"], language: "fr", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Codjo", "Sènami", "Bienvenu", "Fifamè", "Romaric", "Gildas", "Mèdessè", "Aïcha", "Sika", "Florent", "Rachelle", "Euloge"] },
+    firstNames: ["Codjo", "Sènami", "Bienvenu", "Fifamè", "Romaric", "Gildas", "Mèdessè", "Aïcha", "Sika", "Florent", "Rachelle", "Euloge"],
+    lastNames: ["Houngbo", "Dossou", "Agossou", "Ahouansou", "Zinsou", "Adjovi", "Hounkpatin", "Gbaguidi", "Kiki", "Tossou", "Akpovi", "Sossa"] },
   CI: { code: "CI", name: "Côte d'Ivoire", aliases: ["cote d ivoire", "cote divoire", "ivory coast", "rci"], language: "fr", flavor: "africa", addressStyle: "africa", welcome: "Akwaba",
-    firstNames: ["Kouassi", "Aya", "Konan", "Adjoua", "Yao", "Affoué", "Koffi", "Amenan", "Sékou", "Mariam", "Drissa", "Awa"] },
+    firstNames: ["Kouassi", "Aya", "Konan", "Adjoua", "Yao", "Affoué", "Koffi", "Amenan", "Sékou", "Mariam", "Drissa", "Awa"],
+    lastNames: ["Kouamé", "Koné", "Traoré", "N'Guessan", "Kouadio", "Bamba", "Ouattara", "Diallo", "Konan", "Aka", "Brou", "Gnagne"] },
   NG: { code: "NG", name: "Nigeria", aliases: ["nigeria"], language: "en", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Chinedu", "Ngozi", "Tunde", "Funmi", "Emeka", "Bola", "Uche", "Kemi", "Segun", "Amaka", "Ibrahim", "Aisha", "Femi", "Yetunde"] },
+    firstNames: ["Chinedu", "Ngozi", "Tunde", "Funmi", "Emeka", "Bola", "Uche", "Kemi", "Segun", "Amaka", "Ibrahim", "Aisha", "Femi", "Yetunde"],
+    lastNames: ["Okafor", "Adeyemi", "Okonkwo", "Balogun", "Eze", "Adebayo", "Nwosu", "Olawale", "Chukwu", "Afolabi", "Bello", "Obi"] },
   SN: { code: "SN", name: "Sénégal", aliases: ["senegal"], language: "fr", flavor: "africa", addressStyle: "africa", welcome: "Teranga",
-    firstNames: ["Moussa", "Fatou", "Mamadou", "Awa", "Cheikh", "Aminata", "Ousmane", "Khady", "Ibrahima", "Ndèye", "Modou", "Coumba"] },
+    firstNames: ["Moussa", "Fatou", "Mamadou", "Awa", "Cheikh", "Aminata", "Ousmane", "Khady", "Ibrahima", "Ndèye", "Modou", "Coumba"],
+    lastNames: ["Diop", "Ndiaye", "Fall", "Sow", "Diallo", "Gueye", "Faye", "Sarr", "Mbaye", "Cissé", "Seck", "Niang"] },
   BF: { code: "BF", name: "Burkina Faso", aliases: ["burkina faso", "burkina"], language: "fr", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Issa", "Aminata", "Salif", "Rasmata", "Boukary", "Mariam", "Adama", "Awa", "Souleymane", "Bintou"] },
+    firstNames: ["Issa", "Aminata", "Salif", "Rasmata", "Boukary", "Mariam", "Adama", "Awa", "Souleymane", "Bintou"],
+    lastNames: ["Ouédraogo", "Sawadogo", "Kaboré", "Compaoré", "Zongo", "Traoré", "Kiemtoré", "Ilboudo", "Tapsoba", "Yaméogo", "Nikiéma", "Bationo"] },
   ML: { code: "ML", name: "Mali", aliases: ["mali"], language: "fr", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Moussa", "Fatoumata", "Bakary", "Aminata", "Seydou", "Kadiatou", "Sékou", "Oumou", "Modibo", "Hawa"] },
+    firstNames: ["Moussa", "Fatoumata", "Bakary", "Aminata", "Seydou", "Kadiatou", "Sékou", "Oumou", "Modibo", "Hawa"],
+    lastNames: ["Traoré", "Keïta", "Coulibaly", "Diarra", "Konaté", "Sissoko", "Touré", "Dembélé", "Sangaré", "Maïga", "Cissé", "Doumbia"] },
   NE: { code: "NE", name: "Niger", aliases: ["niger"], language: "fr", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Abdou", "Mariama", "Moussa", "Hadiza", "Issoufou", "Zeinabou", "Ali", "Rahila", "Boubacar", "Aïssa"] },
+    firstNames: ["Abdou", "Mariama", "Moussa", "Hadiza", "Issoufou", "Zeinabou", "Ali", "Rahila", "Boubacar", "Aïssa"],
+    lastNames: ["Issoufou", "Mahamadou", "Abdou", "Hama", "Garba", "Souley", "Oumarou", "Zakari", "Maman", "Boubacar", "Adamou", "Idrissa"] },
   CM: { code: "CM", name: "Cameroun", aliases: ["cameroun", "cameroon"], language: "fr", flavor: "africa", addressStyle: "africa",
-    firstNames: ["Paul", "Marie", "Emmanuel", "Brigitte", "Samuel", "Josiane", "Armand", "Clarisse", "Hervé", "Nadège", "Blaise", "Carine"] },
+    firstNames: ["Paul", "Marie", "Emmanuel", "Brigitte", "Samuel", "Josiane", "Armand", "Clarisse", "Hervé", "Nadège", "Blaise", "Carine"],
+    lastNames: ["Mbarga", "Nkoulou", "Fotso", "Kamga", "Ngono", "Tchoupo", "Ndongo", "Etoundi", "Atangana", "Essomba", "Tagne", "Njoya"] },
   KE: { code: "KE", name: "Kenya", aliases: ["kenya"], language: "en", flavor: "africa", addressStyle: "africa", welcome: "Karibu",
-    firstNames: ["Wanjiru", "Otieno", "Achieng", "Kamau", "Njeri", "Mwangi", "Akinyi", "Kiprop", "Wambui", "Omondi", "Chebet", "Mutua"] },
+    firstNames: ["Wanjiru", "Otieno", "Achieng", "Kamau", "Njeri", "Mwangi", "Akinyi", "Kiprop", "Wambui", "Omondi", "Chebet", "Mutua"],
+    lastNames: ["Otieno", "Kamau", "Mwangi", "Ochieng", "Kiprono", "Wanjala", "Njoroge", "Odhiambo", "Mutua", "Kiptoo", "Maina", "Wekesa"] },
   FR: { code: "FR", name: "France", aliases: ["france"], language: "fr", flavor: "west", addressStyle: "fr",
-    firstNames: ["Julien", "Camille", "Nicolas", "Sophie", "Thomas", "Claire", "Antoine", "Léa", "Marc", "Isabelle", "Hugo", "Manon"] },
+    firstNames: ["Julien", "Camille", "Nicolas", "Sophie", "Thomas", "Claire", "Antoine", "Léa", "Marc", "Isabelle", "Hugo", "Manon"],
+    lastNames: ["Martin", "Bernard", "Dubois", "Moreau", "Laurent", "Lefèvre", "Roux", "Fournier", "Girard", "Bonnet", "Mercier", "Lambert"] },
   GB: { code: "GB", name: "United Kingdom", aliases: ["united kingdom", "uk", "england", "great britain", "royaume uni", "angleterre"], language: "en", flavor: "west", addressStyle: "uk",
-    firstNames: ["James", "Olivia", "Oliver", "Emily", "Harry", "Charlotte", "George", "Amelia", "Jack", "Sophie"] },
+    firstNames: ["James", "Olivia", "Oliver", "Emily", "Harry", "Charlotte", "George", "Amelia", "Jack", "Sophie"],
+    lastNames: ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Evans", "Thomas", "Roberts", "Walker", "Wright", "Hughes"] },
   US: { code: "US", name: "United States", aliases: ["united states", "usa", "united states of america", "etats unis"], language: "en", flavor: "west", addressStyle: "us", state: "NY",
-    firstNames: ["Michael", "Jessica", "David", "Ashley", "Chris", "Sarah", "Daniel", "Emily", "Kevin", "Maria", "Luis", "Grace"] },
+    firstNames: ["Michael", "Jessica", "David", "Ashley", "Chris", "Sarah", "Daniel", "Emily", "Kevin", "Maria", "Luis", "Grace"],
+    lastNames: ["Johnson", "Miller", "Davis", "Garcia", "Rodriguez", "Martinez", "Lee", "Walker", "Hall", "Young", "Allen", "King"] },
   CA: { code: "CA", name: "Canada", aliases: ["canada"], language: "en", flavor: "west", addressStyle: "ca", state: "ON",
-    firstNames: ["Liam", "Emma", "Noah", "Olivia", "Ethan", "Chloé", "Lucas", "Sophie", "Ryan", "Priya"] },
+    firstNames: ["Liam", "Emma", "Noah", "Olivia", "Ethan", "Chloé", "Lucas", "Sophie", "Ryan", "Priya"],
+    lastNames: ["Tremblay", "Gagnon", "Roy", "Côté", "Bouchard", "Smith", "Brown", "Wilson", "Martin", "Lee", "Pelletier", "Singh"] },
 };
 
 const hoods = (...names: string[]): Neighbourhood[] => names.map((name) => ({ name }));
@@ -184,7 +201,7 @@ export function cityViewport(c: CityDef): Rect {
 /** Radius of the density peak around the centre, in km. */
 export function cityRadiusKm(c: CityDef): number {
   const { s, n, w, e } = c.extentKm;
-  return Math.max(2, 0.35 * ((s + n + w + e) / 2));
+  return Math.max(2.5, 0.55 * ((s + n + w + e) / 2));
 }
 
 export function cityAreaKm2(c: CityDef): number {

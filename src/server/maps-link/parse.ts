@@ -142,8 +142,8 @@ export function toMapsUrl(input: string): URL {
 /**
  * Google wrapper pages that carry the real link in a parameter: consent.google.com/m?continue=<url>,
  * www.google.com/sorry/index?continue=<url> and www.google.com/url?q=<url> (any Google domain).
- * Returns the page Google meant to show,
- * the URL itself when it is not a wrapper, or null if there is no usable target.
+ * Returns the page Google meant to show, the URL itself when it is not a wrapper, or null when the
+ * wrapper has no usable (Google) target.
  */
 export function unwrapGoogleInterstitial(url: URL): URL | null {
   let current = url;

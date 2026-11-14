@@ -109,10 +109,11 @@ async function fetchHop(fetchImpl: typeof fetch, url: string, signal: AbortSigna
     if (signal?.aborted) throw signal.reason ?? e;
     throw new MapsLinkError(MAPS_LINK_MESSAGES.shortUnreachable);
   }
+  // We never read page content: release the body without waiting (cancel may never settle).
   try {
-    await res.body?.cancel();
+    res.body?.cancel().catch(() => {});
   } catch {
-    // Ignore: we never need the body.
+    // ignore
   }
   return res;
 }

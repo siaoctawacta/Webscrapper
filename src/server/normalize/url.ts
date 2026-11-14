@@ -8,6 +8,8 @@ export function websiteHostOf(url: string | null | undefined): string | null {
   if (typeof url !== "string") return null;
   const raw = url.trim();
   if (!raw) return null;
+  // "mailto:", "tel:", "javascript:"… are not websites; "host:8080/x" is a host with a port.
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) && /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(raw)) return null;
   const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `http://${raw.replace(/^\/+/, "")}`;
   let parsed: URL;
   try {

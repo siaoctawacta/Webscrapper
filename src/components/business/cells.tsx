@@ -4,7 +4,7 @@
  * cell; restricted values ("Not stored") and live-loaded markers are handled here for every field.
  */
 import * as React from "react";
-import { ExternalLink, MapPin, Star } from "lucide-react";
+import { Ban, Copy, ExternalLink, MapPin, Star } from "lucide-react";
 import type { BusinessRow, SourcePolicyInfo } from "@/lib/api-types";
 import type { FieldContext, FieldKey } from "@/lib/fields";
 import { cn, formatDate, formatNumber, formatRelative } from "@/lib/utils";
@@ -49,8 +49,8 @@ export const COLUMN_WIDTHS: Record<FieldKey, number> = {
   region: 140,
   country: 120,
   postal_code: 110,
-  rating: 90,
-  review_count: 96,
+  rating: 100,
+  review_count: 104,
   maps_url: 96,
   latitude: 110,
   longitude: 110,
@@ -95,9 +95,18 @@ const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
 export function NameCell({ row, ctx }: { row: BusinessRow; ctx: CellRenderContext }) {
   const closed = row.businessStatus === "CLOSED_PERMANENTLY" || row.businessStatus === "CLOSED_TEMPORARILY";
+  const duplicate = row.qualityStatus === "duplicate_candidate";
+  const live = isLive(row, "business_name");
   const name = row.name?.trim() || null;
+  // The name keeps priority; markers get the rest of the cell and, in narrow name columns, collapse
+  // to their icons (container query on the cell).
+  const markers = Number(duplicate) + Number(closed) + Number(live);
+  const nameClass = cn("min-w-0 truncate font-medium", markers > 0 && "shrink-0 max-w-[72%]");
+  const marker = "min-w-6 shrink px-1.5 text-[10px] [&_svg]:shrink-0";
+  // With several markers, show icons only (tooltips/aria-labels carry the words).
+  const markerText = cn("truncate @max-[11rem]/name:hidden", markers > 1 && "hidden");
   return (
-    <span className="flex min-w-0 items-center gap-1.5">
+    <span className="@container/name flex w-full min-w-0 items-center gap-1.5">
       {name ? (
         ctx.onOpen ? (
           <button
@@ -107,12 +116,12 @@ export function NameCell({ row, ctx }: { row: BusinessRow; ctx: CellRenderContex
               ctx.onOpen?.(row);
             }}
             title={name}
-            className="min-w-0 truncate rounded-sm text-left font-medium outline-none underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring/40"
+            className={cn(nameClass, "rounded-sm text-left outline-none underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring/40")}
           >
             {name}
           </button>
         ) : (
-          <span className="min-w-0 truncate font-medium" title={name}>
+          <span className={nameClass} title={name}>
             {name}
           </span>
         )
@@ -121,18 +130,22 @@ export function NameCell({ row, ctx }: { row: BusinessRow; ctx: CellRenderContex
       ) : (
         <Muted>Unnamed business</Muted>
       )}
-      {isLive(row, "business_name") && <LiveIndicator source={row.source} policies={ctx.policies} />}
-      {row.qualityStatus === "duplicate_candidate" && (
-        <Tooltip content="Looks like another result (same phone, website, or a very similar name nearby). Nothing was merged.">
-          <Badge variant="warning" className="shrink-0 px-1.5 text-[10px]">
-            Possible duplicate
+      {live && <LiveIndicator source={row.source} policies={ctx.policies} />}
+      {duplicate && (
+        <Tooltip content="Possible duplicate: looks like another result (same phone, website, or a very similar name nearby). Nothing was merged.">
+          <Badge variant="warning" className={marker} aria-label="Possible duplicate">
+            <Copy aria-hidden />
+            <span className={markerText}>Duplicate?</span>
           </Badge>
         </Tooltip>
       )}
       {closed && (
-        <Badge variant="danger" className="shrink-0 px-1.5 text-[10px]">
-          {businessStatusLabel(row.businessStatus)}
-        </Badge>
+        <Tooltip content={`${businessStatusLabel(row.businessStatus)} (as listed by ${sourceLabel(row.source, ctx.policies)}).`}>
+          <Badge variant="danger" className={marker} aria-label={businessStatusLabel(row.businessStatus) ?? "Closed"}>
+            <Ban aria-hidden />
+            <span className={markerText}>Closed</span>
+          </Badge>
+        </Tooltip>
       )}
     </span>
   );
@@ -342,7 +355,9 @@ function renderValue(key: FieldKey, row: BusinessRow, ctx: CellRenderContext): R
 
 /** Content for one grid cell (handles "Not stored" and "live" markers for every field). */
 export function renderBusinessCell(key: FieldKey, row: BusinessRow, ctx: CellRenderContext): React.ReactNode {
-  if (key !== "business_name" && isRestricted(row, key)) return <RestrictedValue source={row.source} policies={ctx.policies} />;
+  if (key !== "business_name" && isRestricted(row, key)) {
+    return <RestrictedValue source={row.source} policies={ctx.policies} compact={COLUMN_WIDTHS[key] < 120} />;
+  }
   const value = renderValue(key, row, ctx);
   if (key !== "business_name" && isLive(row, key)) {
     return (

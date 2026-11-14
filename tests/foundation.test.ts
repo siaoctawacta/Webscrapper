@@ -69,3 +69,13 @@ describe("list SQL", () => {
     expect(() => parseListQuery(new URLSearchParams("page_size=1000"), "results")).toThrow(/page_size/);
   });
 });
+
+describe("disabled accounts", () => {
+  it("cannot create a session", async () => {
+    const u = await createTestUser();
+    await db().update(user).set({ status: "disabled" }).where(eq(user.id, u.id));
+    const res = await getAuth().api.signInEmail({ body: { email: u.email, password: "correct-horse-battery-staple" }, asResponse: true });
+    expect(res.status).toBe(403);
+    expect(await res.text()).toMatch(/disabled/i);
+  });
+});

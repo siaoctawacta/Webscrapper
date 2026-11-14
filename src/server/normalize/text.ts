@@ -78,42 +78,54 @@ export function nameKey(name: string): string {
   return (kept.length ? kept : words).join(" ");
 }
 
+// Reused DP rows (the function is synchronous, so sharing them is safe).
+let rowA = new Int32Array(64);
+let rowB = new Int32Array(64);
+
 /**
  * Levenshtein distance with an upper bound: returns `max + 1` as soon as the distance is known to
- * exceed `max` (banded dynamic programming, O(max · n)).
+ * exceed `max` (banded dynamic programming, O(max · n), no allocation in the hot path).
  */
 export function boundedLevenshtein(a: string, b: string, max: number): number {
   if (a === b) return 0;
   const la = a.length;
   const lb = b.length;
-  if (Math.abs(la - lb) > max) return max + 1;
-  if (la === 0) return lb;
-  if (lb === 0) return la;
-  let prev = new Array<number>(lb + 1);
-  let cur = new Array<number>(lb + 1);
-  for (let j = 0; j <= lb; j++) prev[j] = j;
   const BIG = max + 1;
+  if (Math.abs(la - lb) > max) return BIG;
+  if (la === 0) return lb <= max ? lb : BIG;
+  if (lb === 0) return la <= max ? la : BIG;
+  if (rowA.length < lb + 2) {
+    rowA = new Int32Array(lb + 2);
+    rowB = new Int32Array(lb + 2);
+  }
+  let prev = rowA;
+  let cur = rowB;
+  for (let j = 0; j <= lb; j++) prev[j] = j <= max ? j : BIG;
+  prev[lb + 1] = BIG;
   for (let i = 1; i <= la; i++) {
     const from = Math.max(1, i - max);
     const to = Math.min(lb, i + max);
-    cur[0] = i;
+    cur[0] = i <= max ? i : BIG;
     if (from > 1) cur[from - 1] = BIG;
-    let rowMin = BIG;
+    let rowMin = from > 1 ? BIG : cur[0];
     const ca = a.charCodeAt(i - 1);
     for (let j = from; j <= to; j++) {
-      const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
-      const del = (prev[j] ?? BIG) + 1;
-      const ins = (cur[j - 1] ?? BIG) + 1;
-      const sub = (prev[j - 1] ?? BIG) + cost;
-      const v = Math.min(del, ins, sub);
+      const sub = prev[j - 1]! + (ca === b.charCodeAt(j - 1) ? 0 : 1);
+      const del = prev[j]! + 1;
+      const ins = cur[j - 1]! + 1;
+      let v = sub < del ? sub : del;
+      if (ins < v) v = ins;
+      if (v > BIG) v = BIG;
       cur[j] = v;
       if (v < rowMin) rowMin = v;
     }
     if (to < lb) cur[to + 1] = BIG;
     if (rowMin > max) return BIG;
-    [prev, cur] = [cur, prev];
+    const t = prev;
+    prev = cur;
+    cur = t;
   }
-  const d = prev[lb] ?? BIG;
+  const d = prev[lb]!;
   return d > max ? BIG : d;
 }
 
@@ -128,7 +140,8 @@ export function stringSimilarity(a: string, b: string, min = 0): number {
   return 1 - d / maxLen;
 }
 
-const sortedWords = (k: string) => k.split(" ").sort().join(" ");
+/** Name key with its words sorted, for order-insensitive comparison. */
+export const sortedWords = (k: string) => (k.includes(" ") ? k.split(" ").sort().join(" ") : k);
 
 /**
  * Business-name similarity in [0, 1]: accent/case/punctuation-insensitive, ignores common words

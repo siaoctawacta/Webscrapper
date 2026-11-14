@@ -67,13 +67,45 @@ export type BusinessSheetProps = {
   actions?: React.ReactNode;
   /** True while the search job is still visiting websites. */
   enrichmentInProgress?: boolean;
+  /**
+   * Extra content shown first in the body, e.g. the collection's editable lead panel. When given,
+   * the read-only "Lead" section is left out (the editor already shows status, tags and notes).
+   */
+  children?: React.ReactNode;
 };
 
-export function BusinessSheet({ row, open, onOpenChange, policies, actions, enrichmentInProgress }: BusinessSheetProps) {
+export function BusinessSheet({ row, open, onOpenChange, policies, actions, enrichmentInProgress, children }: BusinessSheetProps) {
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const returnFocus = React.useRef<HTMLElement | null>(null);
   return (
     <Dialog open={open && !!row} onOpenChange={onOpenChange}>
-      <SheetContent className="max-w-lg" aria-describedby={undefined}>
-        {row && <SheetBody row={row} policies={policies} actions={actions} enrichmentInProgress={enrichmentInProgress} />}
+      <SheetContent
+        ref={contentRef}
+        className="max-w-lg"
+        aria-describedby={undefined}
+        // Land on the title (read first by screen readers) instead of the first action button.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          const active = document.activeElement;
+          returnFocus.current = active instanceof HTMLElement && active !== document.body ? active : null;
+          contentRef.current?.querySelector<HTMLElement>("[data-sheet-title]")?.focus();
+        }}
+        // The sheet is opened programmatically (no Dialog.Trigger), so put focus back where it was
+        // (usually the grid row) ourselves.
+        onCloseAutoFocus={(e) => {
+          const el = returnFocus.current;
+          returnFocus.current = null;
+          if (el?.isConnected) {
+            e.preventDefault();
+            el.focus({ preventScroll: true });
+          }
+        }}
+      >
+        {row && (
+          <SheetBody row={row} policies={policies} actions={actions} enrichmentInProgress={enrichmentInProgress}>
+            {children}
+          </SheetBody>
+        )}
       </SheetContent>
     </Dialog>
   );
@@ -112,7 +144,7 @@ function Check({ ok, yes, no }: { ok: boolean | undefined; yes: string; no: stri
   );
 }
 
-function SheetBody({ row, policies, actions, enrichmentInProgress }: Omit<BusinessSheetProps, "open" | "onOpenChange" | "row"> & { row: BusinessRow }) {
+function SheetBody({ row, policies, actions, enrichmentInProgress, children }: Omit<BusinessSheetProps, "open" | "onOpenChange" | "row"> & { row: BusinessRow }) {
   const restricted = (k: FieldKey) => isRestricted(row, k);
   const live = (k: FieldKey) => (isLive(row, k) ? <LiveIndicator source={row.source} policies={policies} className="ml-1.5 align-middle" /> : null);
   const notStored = <RestrictedValue source={row.source} policies={policies} />;
@@ -147,7 +179,7 @@ function SheetBody({ row, policies, actions, enrichmentInProgress }: Omit<Busine
           {closed && row.businessStatus !== "OPERATIONAL" && <Badge variant="danger">{closed}</Badge>}
         </div>
         <div className="grid gap-1">
-          <D.Title className="text-lg font-semibold leading-snug tracking-tight">
+          <D.Title data-sheet-title tabIndex={-1} className="text-lg font-semibold leading-snug tracking-tight outline-none">
             {row.name?.trim() ? row.name : restricted("business_name") ? "Name not stored" : "Unnamed business"}
             {live("business_name")}
           </D.Title>
@@ -176,6 +208,12 @@ function SheetBody({ row, policies, actions, enrichmentInProgress }: Omit<Busine
 
       <div className="flex-1 overflow-y-auto px-6 py-5">
         <div className="grid gap-7">
+          {children && (
+            <>
+              <div className="grid gap-3">{children}</div>
+              <Separator />
+            </>
+          )}
           <Section title="Contact">
             <dl className="grid gap-2.5">
               <Item label="Phone" icon={Phone}>
@@ -432,7 +470,7 @@ function SheetBody({ row, policies, actions, enrichmentInProgress }: Omit<Busine
             {attribution && <p className="text-[12px] text-muted-foreground">{attribution}</p>}
           </Section>
 
-          {row.lead && (
+          {row.lead && !children && (
             <>
               <Separator />
               <Section title="Lead">

@@ -3,7 +3,7 @@ import * as React from "react";
 import Link from "next/link";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Download, ExternalLink, Info, LayoutTemplate, Mail, MoreHorizontal, Pencil, Search, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Info, LayoutTemplate, Mail, PanelRight, Pencil, Search, Trash2, TriangleAlert } from "lucide-react";
 import type { BusinessRow, CollectionDto, ListResponse } from "@/lib/api-types";
 import { serializeListQuery } from "@/lib/list-query";
 import { api } from "@/lib/api-client";
@@ -11,8 +11,8 @@ import { formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Notice, Skeleton } from "@/components/ui/misc";
 import { Label } from "@/components/ui/label";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DataGrid, emptySelection, explicitIds, resolveSelectionIds, selectionCount, type GridSelection } from "@/components/data-grid";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DataGrid, RowActionsMenu, emptySelection, explicitIds, resolveSelectionIds, selectionCount, type GridSelection } from "@/components/data-grid";
 import { BusinessSheet } from "@/components/business/business-sheet";
 import { useListQueryState } from "@/hooks/use-list-query-state";
 import { useGridColumns } from "@/hooks/use-grid-columns";
@@ -135,6 +135,7 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
         isLoading={leads.isLoading}
         isFetching={leads.isFetching}
         error={leads.error?.message ?? null}
+        onRetry={() => leads.refetch()}
         query={query}
         onQueryChange={setQuery}
         columns={grid.columns}
@@ -146,42 +147,40 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
         facets={leads.data?.facets}
         policies={policies}
         onRowOpen={(r) => setOpenId(r.id)}
+        activeRowId={openId}
+        searchPlaceholder="Search name, notes, tags, email…"
+        aria-label="Leads"
         renderCellOverride={{
           lead_status: (row) => <LeadStatusSelect row={row} onUpdated={patchRow} />,
           tags: (row) => <LeadTagsCell row={row} suggestions={tagSuggestions} onUpdated={patchRow} />,
         }}
         rowActions={(row) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-xs" aria-label="Lead actions" onClick={(e) => e.stopPropagation()}>
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onSelect={() => setOpenId(row.id)}>View & edit</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setProposalRow(row)}>
-                <Mail /> Write proposal
+          <RowActionsMenu label={`Actions for ${row.name ?? "lead"}`}>
+            <DropdownMenuItem onSelect={() => setOpenId(row.id)}>
+              <PanelRight /> View & edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setProposalRow(row)}>
+              <Mail /> Write proposal
+            </DropdownMenuItem>
+            {row.websiteStatus === "none" && (
+              <DropdownMenuItem asChild>
+                <Link href={`/concepts/new?ref_kind=lead&ref_id=${row.id}`}>
+                  <LayoutTemplate /> Draft a homepage concept
+                </Link>
               </DropdownMenuItem>
-              {row.websiteStatus === "none" && (
-                <DropdownMenuItem asChild>
-                  <Link href={`/concepts/new?ref_kind=lead&ref_id=${row.id}`}>
-                    <LayoutTemplate /> Draft a homepage concept
-                  </Link>
-                </DropdownMenuItem>
-              )}
-              {row.mapsUrl && (
-                <DropdownMenuItem asChild>
-                  <a href={row.mapsUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink /> Open in Google Maps
-                  </a>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem destructive onSelect={() => removeOne.mutate(row.id)}>
-                <Trash2 /> Remove from collection
+            )}
+            {row.mapsUrl && (
+              <DropdownMenuItem asChild>
+                <a href={row.mapsUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink /> Open in Google Maps
+                </a>
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem destructive onSelect={() => removeOne.mutate(row.id)}>
+              <Trash2 /> Remove from collection
+            </DropdownMenuItem>
+          </RowActionsMenu>
         )}
         selectionActions={() =>
           selector ? (

@@ -1,5 +1,5 @@
-import { M_PER_DEG_LAT, approxDistanceMeters, isLat, isLng } from "./geo";
-import { nameKey, nameSimilarity } from "./text";
+import { EARTH_RADIUS_M, M_PER_DEG_LAT, isLat, isLng } from "./geo";
+import { nameKey, sortedWords, stringSimilarity } from "./text";
 import type { DuplicateCandidate } from "./types";
 import { isSharedPlatformHost } from "./url";
 
@@ -7,6 +7,8 @@ import { isSharedPlatformHost } from "./url";
 export const DUPLICATE_NAME_SIMILARITY = 0.9;
 /** Maximum distance for the name rule. */
 export const DUPLICATE_MAX_DISTANCE_M = 80;
+
+const MAX_D2 = DUPLICATE_MAX_DISTANCE_M * DUPLICATE_MAX_DISTANCE_M;
 
 /** Union-find where the smallest index is always the root (so "the earlier record wins"). */
 class MinRootSets {
@@ -59,6 +61,12 @@ export function findProbableDuplicates(records: DuplicateCandidate[]): Map<strin
   const dLng = DUPLICATE_MAX_DISTANCE_M / (M_PER_DEG_LAT * Math.max(0.05, Math.cos((maxAbsLat * Math.PI) / 180)));
   const grid = new Map<string, number[]>();
   const keys: (string | null)[] = new Array(n).fill(null);
+  const sortedKeys: (string | null)[] = new Array(n).fill(null);
+  // Local metric coordinates (equirectangular) so the hot loop does plain arithmetic.
+  const ys = new Float64Array(n);
+  const xs = new Float64Array(n);
+  const cosLat = new Float64Array(n);
+  const radM = (Math.PI / 180) * EARTH_RADIUS_M;
 
   for (let i = 0; i < n; i++) {
     const r = records[i]!;
@@ -77,23 +85,38 @@ export function findProbableDuplicates(records: DuplicateCandidate[]): Map<strin
     const key = nameKey(r.name);
     if (!key) continue;
     keys[i] = key;
+    const sorted = sortedWords(key);
+    sortedKeys[i] = sorted;
+    ys[i] = r.lat * radM;
+    xs[i] = r.lng * radM;
+    cosLat[i] = Math.cos((r.lat * Math.PI) / 180);
+    const yi = ys[i]!;
+    const xi = xs[i]!;
+    const ci = cosLat[i]!;
+    const la = key.length;
     const gy = Math.floor(r.lat / dLat);
     const gx = Math.floor(r.lng / dLng);
     for (let oy = -1; oy <= 1; oy++) {
       for (let ox = -1; ox <= 1; ox++) {
         const bucket = grid.get(`${gx + ox}:${gy + oy}`);
         if (!bucket) continue;
-        for (const j of bucket) {
-          const o = records[j]!;
-          if (o.id === r.id) continue;
+        for (let b = 0; b < bucket.length; b++) {
+          const j = bucket[b]!;
           const kj = keys[j]!;
           // Cheap length filter: Levenshtein similarity ≤ shorter/longer (also for the word-sorted form).
-          const la = key.length;
           const lb = kj.length;
-          if (Math.min(la, lb) / Math.max(la, lb) < DUPLICATE_NAME_SIMILARITY) continue;
-          if (approxDistanceMeters({ lat: r.lat, lng: r.lng }, { lat: o.lat!, lng: o.lng! }) >= DUPLICATE_MAX_DISTANCE_M) continue;
+          if ((la < lb ? la / lb : lb / la) < DUPLICATE_NAME_SIMILARITY) continue;
+          const dy = ys[j]! - yi;
+          const dx = (xs[j]! - xi) * ((cosLat[j]! + ci) / 2);
+          if (dx * dx + dy * dy >= MAX_D2) continue;
+          if (records[j]!.id === r.id) continue;
           if (sets.find(i) === sets.find(j)) continue;
-          if (nameSimilarity(key, kj, { min: DUPLICATE_NAME_SIMILARITY, keysGiven: true }) >= DUPLICATE_NAME_SIMILARITY) sets.union(j, i);
+          const sj = sortedKeys[j]!;
+          const similar =
+            sorted === sj ||
+            stringSimilarity(key, kj, DUPLICATE_NAME_SIMILARITY) >= DUPLICATE_NAME_SIMILARITY ||
+            (sorted !== key || sj !== kj ? stringSimilarity(sorted, sj, DUPLICATE_NAME_SIMILARITY) >= DUPLICATE_NAME_SIMILARITY : false);
+          if (similar) sets.union(j, i);
         }
       }
     }

@@ -35,7 +35,8 @@ function mockFetch(replies: Reply[]) {
     const r = replies[Math.min(calls.length, replies.length) - 1]!;
     const out = typeof r === "function" ? await r(call) : r;
     if (out instanceof Error) throw out;
-    return out instanceof Response ? out.clone() : out;
+    // A fresh Response per call (clones share a tee'd body).
+    return new Response(await out.clone().text(), { status: out.status, headers: out.headers });
   };
   return { fetch: fn as typeof fetch, calls };
 }

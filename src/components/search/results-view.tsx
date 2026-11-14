@@ -13,6 +13,7 @@ import {
   LayoutTemplate,
   Mail,
   MoreHorizontal,
+  PanelRight,
   Plus,
   Square,
   Trash2,
@@ -34,7 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataGrid, emptySelection, explicitIds, resolveSelectionIds, selectionCount, type GridSelection } from "@/components/data-grid";
+import { DataGrid, RowActionsMenu, emptySelection, explicitIds, resolveSelectionIds, selectionCount, type GridSelection } from "@/components/data-grid";
 import { BusinessSheet } from "@/components/business/business-sheet";
 import { useListQueryState } from "@/hooks/use-list-query-state";
 import { useGridColumns } from "@/hooks/use-grid-columns";
@@ -58,39 +59,34 @@ function useJob(jobId: string) {
 
 function RowMenu({ row, onOpen, onProposal, onSave }: { row: BusinessRow; onOpen: () => void; onProposal: () => void; onSave: () => void }) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-xs" aria-label={`Actions for ${row.name ?? "business"}`} onClick={(e) => e.stopPropagation()}>
-          <MoreHorizontal />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
-        <DropdownMenuItem onSelect={onOpen}>View details</DropdownMenuItem>
-        <DropdownMenuItem onSelect={onProposal}>
-          <Mail /> Write proposal
+    <RowActionsMenu label={`Actions for ${row.name ?? "business"}`}>
+      <DropdownMenuItem onSelect={onOpen}>
+        <PanelRight /> View details
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={onProposal}>
+        <Mail /> Write proposal
+      </DropdownMenuItem>
+      {row.websiteStatus === "none" && (
+        <DropdownMenuItem asChild>
+          <Link href={`/concepts/new?ref_kind=result&ref_id=${row.id}`}>
+            <LayoutTemplate /> Draft a homepage concept
+          </Link>
         </DropdownMenuItem>
-        {row.websiteStatus === "none" && (
+      )}
+      <DropdownMenuItem onSelect={onSave}>
+        <FolderPlus /> Save to collection
+      </DropdownMenuItem>
+      {row.mapsUrl && (
+        <>
+          <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href={`/concepts/new?ref_kind=result&ref_id=${row.id}`}>
-              <LayoutTemplate /> Draft a homepage concept
-            </Link>
+            <a href={row.mapsUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink /> Open in Google Maps
+            </a>
           </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onSelect={onSave}>
-          <FolderPlus /> Save to collection
-        </DropdownMenuItem>
-        {row.mapsUrl && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <a href={row.mapsUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink /> Open in Google Maps
-              </a>
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </>
+      )}
+    </RowActionsMenu>
   );
 }
 
@@ -168,7 +164,6 @@ export function ResultsView({ jobId }: { jobId: string }) {
   const j = job.data;
   const c = j.counts;
   const policies = results.data?.policies ?? [];
-  const attribution = policies.map((p) => p.attribution).filter(Boolean).join(" · ");
   const segment = segmentOf(query);
   const setSegment = (s: Segment) => {
     const filters = { ...query.filters };
@@ -270,6 +265,7 @@ export function ResultsView({ jobId }: { jobId: string }) {
             isLoading={results.isLoading}
             isFetching={results.isFetching}
             error={results.error?.message ?? null}
+            onRetry={() => results.refetch()}
             query={query}
             onQueryChange={setQuery}
             columns={grid.columns}
@@ -281,6 +277,11 @@ export function ResultsView({ jobId }: { jobId: string }) {
             facets={results.data?.facets}
             policies={policies}
             onRowOpen={setOpenRow}
+            activeRowId={openRow?.id}
+            lockedFilters={["has_website"]}
+            enrichmentInProgress={j.status === "enriching" || j.status === "searching"}
+            searchPlaceholder="Search name, phone, email, address…"
+            aria-label="Search results"
             rowActions={(row) => (
               <RowMenu
                 row={row}
@@ -305,7 +306,6 @@ export function ResultsView({ jobId }: { jobId: string }) {
               ) : undefined
             }
           />
-          {attribution && <p className="text-right text-[11px] text-muted-foreground">{attribution}</p>}
         </>
       )}
 
@@ -314,6 +314,7 @@ export function ResultsView({ jobId }: { jobId: string }) {
         open={openRow !== null}
         onOpenChange={(o) => !o && setOpenRow(null)}
         policies={policies}
+        enrichmentInProgress={j.status === "enriching" || j.status === "searching"}
         actions={
           openRow && (
             <>

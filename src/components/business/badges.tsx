@@ -133,15 +133,30 @@ export function SourceBadge({ source, policies, className }: { source: SourceId;
 }
 
 /** Muted "Not stored" pill for a value the source policy doesn't allow us to keep. */
-export function RestrictedValue({ source, policies, className }: { source: SourceId; policies?: SourcePolicyInfo[]; className?: string }) {
+export function RestrictedValue({
+  source,
+  policies,
+  compact,
+  className,
+}: {
+  source: SourceId;
+  policies?: SourcePolicyInfo[];
+  /** Without the lock icon, for narrow columns. */
+  compact?: boolean;
+  className?: string;
+}) {
   const msg = restrictedMessage(source, policies);
   return (
     <Tooltip content={msg}>
       <span
         aria-label={`Not stored. ${msg}`}
-        className={cn("inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground", className)}
+        className={cn(
+          "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-muted py-0.5 text-[11px] font-medium text-muted-foreground",
+          compact ? "px-1.5" : "px-2",
+          className,
+        )}
       >
-        <Lock className="size-3" aria-hidden />
+        {!compact && <Lock className="size-3" aria-hidden />}
         Not stored
       </span>
     </Tooltip>
@@ -153,7 +168,7 @@ export function LiveIndicator({ source, policies, className }: { source: SourceI
   const msg = liveMessage(source, policies);
   return (
     <Tooltip content={msg}>
-      <span aria-label={msg} className={cn("inline-flex shrink-0 items-center gap-0.5 rounded px-1 text-[10px] font-medium uppercase tracking-wide text-accent-soft-foreground bg-accent-soft", className)}>
+      <span aria-label={msg} className={cn("inline-flex shrink-0 items-center gap-0.5 rounded bg-accent-soft px-1 text-[10px] font-medium leading-4 text-accent-soft-foreground", className)}>
         <Radio className="size-2.5" aria-hidden />
         live
       </span>

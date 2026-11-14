@@ -45,7 +45,7 @@ const PLANS: Record<string, PhonePlan> = {
   },
   GH: {
     callingCode: "233", nsnLength: 9, trunk: "0", mobileShare: 0.85,
-    mobile: { prefixes: ["20", "23", "24", "25", "26", "27", "28", "50", "53", "54", "55", "56", "57", "59"], groups: [2, 3, 4] },
+    mobile: { prefixes: ["20", "23", "24", "256", "257", "26", "27", "28", "50", "53", "54", "55", "56", "57", "597", "598", "599"], groups: [2, 3, 4] },
     fixed: { prefixes: ["302", "303"], groups: [2, 3, 4] },
     fixedByCity: { accra: ["302", "303"], kumasi: ["322"], tamale: ["372"], takoradi: ["312"] },
   },
@@ -104,13 +104,14 @@ const PLANS: Record<string, PhonePlan> = {
   },
   FR: {
     callingCode: "33", nsnLength: 9, trunk: "0", mobileShare: 0.3,
-    mobile: { prefixes: ["61", "62", "63", "64", "65", "66", "67", "68", "75", "76", "77", "78"], groups: [1, 2, 2, 2, 2] },
+    mobile: { prefixes: ["61", "62", "64", "65", "66", "67", "68", "75", "76", "77", "78"], groups: [1, 2, 2, 2, 2] },
     fixed: { prefixes: ["142", "143", "144", "145", "147", "148", "153", "155"], groups: [1, 2, 2, 2, 2] },
     fixedByCity: { paris: ["142", "143", "144", "145", "147", "148", "153", "155"], lyon: ["472", "478"] },
   },
+  // Mainland-UK mobile blocks only (+44 7… also covers Jersey, Guernsey and the Isle of Man).
   GB: {
     callingCode: "44", nsnLength: 10, trunk: "0", mobileShare: 0.3,
-    mobile: { prefixes: ["74", "75", "77", "78", "79"], groups: [4, 6] },
+    mobile: { prefixes: ["740", "741", "742", "743", "744", "746", "747", "748", "749", "751", "753", "754", "755", "756", "757", "758", "759", "771", "772", "773", "774", "775", "776", "777", "780", "781", "784", "785", "786", "787", "788", "789", "790", "792", "794", "795", "796", "797", "798", "799"], groups: [4, 6] },
     fixed: { prefixes: ["207", "203", "208"], groups: [2, 4, 4] },
   },
   US: {
@@ -167,9 +168,7 @@ export function samplePhone(rng: Rng, countryCode: string, cityId?: string): Sam
       mobile,
     };
   }
-  // Avoid a leading 0 right after the prefix for countries whose ranges reject it (keeps numbers plausible).
-  let nsn = prefix + rng.digits(plan.nsnLength - prefix.length);
-  if (countryCode === "GB" && mobile) nsn = prefix + String(rng.int(1, 9)) + rng.digits(plan.nsnLength - prefix.length - 1);
+  const nsn = prefix + rng.digits(plan.nsnLength - prefix.length);
   const grouped = group(nsn, range.groups);
   return {
     national: plan.trunk ? `${plan.trunk}${grouped}` : grouped,

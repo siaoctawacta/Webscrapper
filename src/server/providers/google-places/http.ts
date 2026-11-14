@@ -184,7 +184,7 @@ export class PlacesHttp {
 
       const status = res.status;
       if ((status === 429 || status >= 500) && canRetry) {
-        await this.discard(res);
+        this.discard(res);
         await this.sleep(this.backoff(attempt, res.headers.get("retry-after")), ctx.signal);
         continue;
       }
@@ -230,9 +230,10 @@ export class PlacesHttp {
     }
   }
 
-  private async discard(res: Response) {
+  /** Release the connection without reading the body (fire-and-forget: cancel may never settle). */
+  private discard(res: Response) {
     try {
-      await res.body?.cancel();
+      res.body?.cancel().catch(() => {});
     } catch {
       // ignore
     }
