@@ -1,0 +1,63 @@
+{
+  "places": [
+    {
+      "formattedAddress": "Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1256261,
+        "longitude": 1.2254183
+      },
+      "viewport": {
+        "low": {
+          "latitude": 6.0960581,
+          "longitude": 1.1337852
+        },
+        "high": {
+          "latitude": 6.2353937,
+          "longitude": 1.3110569
+        }
+      },
+      "displayName": {
+        "text": "Lomé",
+        "languageCode": "fr"
+      }
+    }
+  ]
+}

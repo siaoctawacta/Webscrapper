@@ -1,0 +1,1700 @@
+{
+  "places": [
+    {
+      "id": "ChIJc76SJQn0nuzZL3_Jrg0fzr5",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Kodjoviakopé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Kodjoviakopé",
+          "shortText": "Kodjoviakopé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1843733,
+        "longitude": 1.2564969
+      },
+      "rating": 3.6,
+      "userRatingCount": 279,
+      "googleMapsUri": "https://maps.google.com/?cid=1812685217196692624",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Le Lagon Bleu",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "92 77 48 57",
+      "internationalPhoneNumber": "+228 92 77 48 57",
+      "websiteUri": "https://www.hotel-le-lagon-bleu.example/"
+    },
+    {
+      "id": "ChIJNyfKlnOhNRgglXnO9xMugpI",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du Mono, Djidjolé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du Mono",
+          "shortText": "Boulevard du Mono",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Djidjolé",
+          "shortText": "Djidjolé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1460692,
+        "longitude": 1.1805065
+      },
+      "rating": 4.6,
+      "userRatingCount": 1111,
+      "googleMapsUri": "https://maps.google.com/?cid=2816143728719895775",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Résidence Les Cocotiers",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 76 79 45",
+      "internationalPhoneNumber": "+228 22 76 79 45"
+    },
+    {
+      "id": "ChIJeZ__UKVdF6142Qv8DqbQLdG",
+      "types": [
+        "resort_hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue Sylvanus Olympio, Bè-Klikamé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue Sylvanus Olympio",
+          "shortText": "Avenue Sylvanus Olympio",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Bè-Klikamé",
+          "shortText": "Bè-Klikamé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1821406,
+        "longitude": 1.2646219
+      },
+      "rating": 3.5,
+      "userRatingCount": 1213,
+      "googleMapsUri": "https://maps.google.com/?cid=4351759289033893595",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Océane Plage",
+        "languageCode": "fr"
+      },
+      "primaryType": "resort_hotel",
+      "primaryTypeDisplayName": {
+        "text": "Resort hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "98 49 86 62",
+      "internationalPhoneNumber": "+228 98 49 86 62",
+      "websiteUri": "https://www.hotel-oceane-plage.example/"
+    },
+    {
+      "id": "ChIJbmxEHT-7xqx_9T8sF-D9nqB",
+      "types": [
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Tokoin, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Tokoin",
+          "shortText": "Tokoin",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1456965,
+        "longitude": 1.246333
+      },
+      "rating": 3.3,
+      "userRatingCount": 829,
+      "googleMapsUri": "https://maps.google.com/?cid=1661534065986155464",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Golden Palm Lodge",
+        "languageCode": "fr"
+      },
+      "primaryType": "lodging",
+      "primaryTypeDisplayName": {
+        "text": "Lodging",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "79 68 63 52",
+      "internationalPhoneNumber": "+228 79 68 63 52"
+    },
+    {
+      "id": "ChIJgzqXCofaaKasBfHIKxv2oMx",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du Mono, Bè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du Mono",
+          "shortText": "Boulevard du Mono",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Bè",
+          "shortText": "Bè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1616528,
+        "longitude": 1.2784381
+      },
+      "rating": 3.8,
+      "userRatingCount": 1914,
+      "googleMapsUri": "https://maps.google.com/?cid=6008809419215775176",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel La Paillote",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      }
+    },
+    {
+      "id": "ChIJjxzcKXsP4wlAS0zaabevqsI",
+      "types": [
+        "guest_house",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard de la Marina, Agbalépédo, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard de la Marina",
+          "shortText": "Boulevard de la Marina",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Agbalépédo",
+          "shortText": "Agbalépédo",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1555083,
+        "longitude": 1.2239473
+      },
+      "rating": 3.7,
+      "userRatingCount": 2367,
+      "googleMapsUri": "https://maps.google.com/?cid=6551652300530391073",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Auberge du Boulevard",
+        "languageCode": "fr"
+      },
+      "primaryType": "guest_house",
+      "primaryTypeDisplayName": {
+        "text": "Guest house",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 18 67 68",
+      "internationalPhoneNumber": "+228 22 18 67 68"
+    },
+    {
+      "id": "ChIJx3DGyu3GnVV7YhqpIgx00uJ",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard de la Marina, Djidjolé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard de la Marina",
+          "shortText": "Boulevard de la Marina",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Djidjolé",
+          "shortText": "Djidjolé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1403774,
+        "longitude": 1.2318097
+      },
+      "googleMapsUri": "https://maps.google.com/?cid=1808868870514039405",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Bè Kpota",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 39 65 43",
+      "internationalPhoneNumber": "+228 22 39 65 43"
+    },
+    {
+      "id": "ChIJxmZ66Zf8HRVhok7--jQV21O",
+      "types": [
+        "extended_stay_hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du Mono, Nyékonakpoè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du Mono",
+          "shortText": "Boulevard du Mono",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Nyékonakpoè",
+          "shortText": "Nyékonakpoè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.188311,
+        "longitude": 1.2446892
+      },
+      "rating": 4.0,
+      "userRatingCount": 655,
+      "googleMapsUri": "https://maps.google.com/?cid=8854677969877687647",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Résidence Akodessewa",
+        "languageCode": "fr"
+      },
+      "primaryType": "extended_stay_hotel",
+      "primaryTypeDisplayName": {
+        "text": "Extended stay hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 45 50 70",
+      "internationalPhoneNumber": "+228 22 45 50 70",
+      "websiteUri": "https://www.residence-akodessewa.example/"
+    },
+    {
+      "id": "ChIJRbpgI9--3Ps9_lWJJpJRO9r",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard de la Marina, Akodessewa, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard de la Marina",
+          "shortText": "Boulevard de la Marina",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Akodessewa",
+          "shortText": "Akodessewa",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1502233,
+        "longitude": 1.215404
+      },
+      "rating": 3.7,
+      "userRatingCount": 119,
+      "googleMapsUri": "https://maps.google.com/?cid=2402537269523572798",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Lumière du Golfe",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "92 62 10 99",
+      "internationalPhoneNumber": "+228 92 62 10 99",
+      "websiteUri": "https://www.hotel-lumiere-du-golfe.example/"
+    },
+    {
+      "id": "ChIJ2hXzfXIYNi680gZnekDiiz2",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Nyékonakpoè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Nyékonakpoè",
+          "shortText": "Nyékonakpoè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1475724,
+        "longitude": 1.2171337
+      },
+      "rating": 4.4,
+      "userRatingCount": 1858,
+      "googleMapsUri": "https://maps.google.com/?cid=9248327116617401941",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Atlantic Breeze Hotel",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 52 31 72",
+      "internationalPhoneNumber": "+228 22 52 31 72",
+      "websiteUri": "https://www.atlantic-breeze-hotel.example/"
+    },
+    {
+      "id": "ChIJ5vVE8AofZ6i_3Puo_QlSequ",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue Sylvanus Olympio, Kodjoviakopé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue Sylvanus Olympio",
+          "shortText": "Avenue Sylvanus Olympio",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Kodjoviakopé",
+          "shortText": "Kodjoviakopé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1325303,
+        "longitude": 1.1801827
+      },
+      "rating": 3.5,
+      "userRatingCount": 1291,
+      "googleMapsUri": "https://maps.google.com/?cid=1240525664291862335",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Le Baobab",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 15 75 23",
+      "internationalPhoneNumber": "+228 22 15 75 23"
+    },
+    {
+      "id": "ChIJL_Wj42H2WSq6yQXTrnlV94l",
+      "types": [
+        "guest_house",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Tokoin, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Tokoin",
+          "shortText": "Tokoin",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1864598,
+        "longitude": 1.2841695
+      },
+      "rating": 4.0,
+      "userRatingCount": 441,
+      "googleMapsUri": "https://maps.google.com/?cid=4069493251629075622",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Maison d'hôtes Adidogomé",
+        "languageCode": "fr"
+      },
+      "primaryType": "guest_house",
+      "primaryTypeDisplayName": {
+        "text": "Guest house",
+        "languageCode": "en"
+      }
+    },
+    {
+      "id": "ChIJeH1zOqUY80SpK7rcw3sIIwJ",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Rue du Commerce, Adidogomé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Rue du Commerce",
+          "shortText": "Rue du Commerce",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Adidogomé",
+          "shortText": "Adidogomé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1655833,
+        "longitude": 1.2482626
+      },
+      "rating": 4.5,
+      "userRatingCount": 2293,
+      "googleMapsUri": "https://maps.google.com/?cid=1730071644480696268",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Tokoin Confort",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 68 54 23",
+      "internationalPhoneNumber": "+228 22 68 54 23"
+    },
+    {
+      "id": "ChIJjbXQZxIsfuGGRqt8MT4xJjh",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du Mono, Lomé 2, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du Mono",
+          "shortText": "Boulevard du Mono",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé 2",
+          "shortText": "Lomé 2",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1607193,
+        "longitude": 1.2811622
+      },
+      "rating": 4.0,
+      "userRatingCount": 1032,
+      "googleMapsUri": "https://maps.google.com/?cid=7221537953599474259",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Résidence Hédzranawoé",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 37 80 44",
+      "internationalPhoneNumber": "+228 22 37 80 44",
+      "websiteUri": "https://www.residence-hedzranawoe.example/"
+    },
+    {
+      "id": "ChIJBdLUSoTlP6RtuYHC_ecC3L3",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Rue Aniko Palako, Nyékonakpoè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Rue Aniko Palako",
+          "shortText": "Rue Aniko Palako",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Nyékonakpoè",
+          "shortText": "Nyékonakpoè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1324597,
+        "longitude": 1.2052053
+      },
+      "rating": 3.3,
+      "userRatingCount": 1175,
+      "googleMapsUri": "https://maps.google.com/?cid=9764172880761535130",
+      "businessStatus": "CLOSED_TEMPORARILY",
+      "displayName": {
+        "text": "Hôtel Les Flamboyants",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 86 29 16",
+      "internationalPhoneNumber": "+228 22 86 29 16"
+    },
+    {
+      "id": "ChIJ0qrua-q3eKTujqWHn4RFm9c",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard de la Marina, Djidjolé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard de la Marina",
+          "shortText": "Boulevard de la Marina",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Djidjolé",
+          "shortText": "Djidjolé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1826015,
+        "longitude": 1.2480859
+      },
+      "rating": 3.6,
+      "userRatingCount": 49,
+      "googleMapsUri": "https://maps.google.com/?cid=4428069717593701508",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Mono Palace",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 31 11 25",
+      "internationalPhoneNumber": "+228 22 31 11 25",
+      "websiteUri": "https://www.hotel-mono-palace.example/"
+    },
+    {
+      "id": "ChIJExUO7CrdEHx8CnrnrXubccN",
+      "types": [
+        "guest_house",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Rue du Commerce, Hédzranawoé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Rue du Commerce",
+          "shortText": "Rue du Commerce",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Hédzranawoé",
+          "shortText": "Hédzranawoé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.170195,
+        "longitude": 1.1927271
+      },
+      "rating": 3.6,
+      "userRatingCount": 1819,
+      "googleMapsUri": "https://maps.google.com/?cid=6380507381563274820",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Guest House Kodjoviakopé",
+        "languageCode": "fr"
+      },
+      "primaryType": "guest_house",
+      "nationalPhoneNumber": "90 86 49 25",
+      "internationalPhoneNumber": "+228 90 86 49 25"
+    },
+    {
+      "id": "ChIJwOVpoTxsdT1F3XSelRijxv0",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Rue du Commerce, Hédzranawoé, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Rue du Commerce",
+          "shortText": "Rue du Commerce",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Hédzranawoé",
+          "shortText": "Hédzranawoé",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1627121,
+        "longitude": 1.2189718
+      },
+      "rating": 4.3,
+      "userRatingCount": 1211,
+      "googleMapsUri": "https://maps.google.com/?cid=5401855180209812472",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel La Marina",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 92 51 88",
+      "internationalPhoneNumber": "+228 22 92 51 88",
+      "websiteUri": "https://www.hotel-la-marina.example/"
+    },
+    {
+      "id": "ChIJTsUKbDV24m3B_2gx95Bb5nX",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Avenue de la Libération, Tokoin, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Avenue de la Libération",
+          "shortText": "Avenue de la Libération",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Tokoin",
+          "shortText": "Tokoin",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.160496,
+        "longitude": 1.2549869
+      },
+      "rating": 3.5,
+      "userRatingCount": 863,
+      "googleMapsUri": "https://maps.google.com/?cid=3788073803798517392",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Agbalépédo",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      }
+    },
+    {
+      "id": "ChIJgzsKR2_A51r7rFIchvsCd9k",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "formattedAddress": "Boulevard du Mono, Bè, Lomé, Togo",
+      "addressComponents": [
+        {
+          "longText": "Boulevard du Mono",
+          "shortText": "Boulevard du Mono",
+          "types": [
+            "route"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Bè",
+          "shortText": "Bè",
+          "types": [
+            "sublocality_level_1",
+            "sublocality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Lomé",
+          "shortText": "Lomé",
+          "types": [
+            "locality",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Golfe",
+          "shortText": "Golfe",
+          "types": [
+            "administrative_area_level_2",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Région Maritime",
+          "shortText": "Région Maritime",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ],
+          "languageCode": "fr"
+        },
+        {
+          "longText": "Togo",
+          "shortText": "TG",
+          "types": [
+            "country",
+            "political"
+          ],
+          "languageCode": "fr"
+        }
+      ],
+      "location": {
+        "latitude": 6.1896723,
+        "longitude": 1.2135069
+      },
+      "rating": 4.4,
+      "userRatingCount": 578,
+      "googleMapsUri": "https://maps.google.com/?cid=5964013068171276734",
+      "businessStatus": "OPERATIONAL",
+      "displayName": {
+        "text": "Hôtel Nyékonakpoè",
+        "languageCode": "fr"
+      },
+      "primaryType": "hotel",
+      "primaryTypeDisplayName": {
+        "text": "Hotel",
+        "languageCode": "en"
+      },
+      "nationalPhoneNumber": "22 25 14 41",
+      "internationalPhoneNumber": "+228 22 25 14 41"
+    }
+  ],
+  "nextPageToken": "AeCrKXsdF0bqcPm3Hn1y5Q9hT6s2tW8uXvBzLfNgJkRiYoA4"
+}
