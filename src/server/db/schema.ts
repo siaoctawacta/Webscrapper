@@ -240,6 +240,8 @@ export const searchJobs = pgTable(
   (t) => [
     index("search_jobs_user_created_idx").on(t.userId, t.createdAt),
     uniqueIndex("search_jobs_user_idem_idx").on(t.userId, t.idempotencyKey),
+    index("search_jobs_status_updated_idx").on(t.status, t.updatedAt),
+    index("search_jobs_results_expiry_idx").on(t.resultsExpireAt).where(sql`${t.resultsPurgedAt} is null`),
   ],
 );
 
@@ -474,7 +476,11 @@ export const auditLogs = pgTable(
     ip: text("ip"),
     createdAt: createdAt(),
   },
-  (t) => [index("audit_logs_created_idx").on(t.createdAt), index("audit_logs_actor_idx").on(t.actorId)],
+  (t) => [
+    index("audit_logs_created_idx").on(t.createdAt),
+    index("audit_logs_actor_idx").on(t.actorId),
+    index("audit_logs_action_created_idx").on(t.action, t.createdAt),
+  ],
 );
 
 /** Fixed-window request counters for API rate limiting. */
