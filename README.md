@@ -109,7 +109,7 @@ pnpm test
 ```
 
 ```bash
-pnpm test:e2e
+pnpm build && pnpm test:e2e
 ```
 
 ```bash
@@ -130,6 +130,8 @@ Tests use a separate Postgres database (`leadfinder_test`) that is recreated on 
 - [ ] Log shipping and uptime monitoring for both processes.
 
 ## Limitations
+
+- **Not yet verified against the live Google Places API or AI Gateway.** Both integrations follow the official documentation and are covered by tests with recorded/mock responses, but this build was developed without network access to Google or the AI Gateway. Run one small search (20 results) after adding your key and check the results before running large ones.
 
 - Google returns at most ~60 results per query; very large targets rely on map tiling, and the real number depends on how many businesses Google lists in the area.
 - Saved Google leads show names/phones only while the Google key works (they're loaded live); sorting/filtering by those fields inside collections only works for sources that allow storage.
