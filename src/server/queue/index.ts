@@ -22,7 +22,8 @@ const g = globalThis as unknown as { __leadfinderBoss?: Promise<PgBoss> };
 export function getBoss(): Promise<PgBoss> {
   if (!g.__leadfinderBoss) {
     g.__leadfinderBoss = (async () => {
-      const boss = new PgBoss({ connectionString: env().DATABASE_URL, schema: "pgboss" });
+      // Small pool: hosted databases (e.g. Supabase's pooler) allow few connections per project.
+      const boss = new PgBoss({ connectionString: env().DATABASE_URL, schema: "pgboss", max: Number(process.env.QUEUE_POOL_MAX ?? 4) });
       boss.on("error", (e) => console.error("[queue]", e));
       await boss.start();
       for (const name of Object.values(QUEUES)) await boss.createQueue(name);

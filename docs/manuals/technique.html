@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>LeadFinder — Documentation technique</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="#fafafa"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span>LeadFinder</div>
+  <div class="kicker">Documentation technique</div>
+  <h1>Déployer, configurer et exploiter LeadFinder</h1>
+  <p class="lead">Mise en ligne pas à pas sur un serveur, configuration de Google Maps et de l’IA, architecture, sécurité, sauvegardes et dépannage.</p>
+  <div class="meta">
+    <div><b>Version</b>1.0</div>
+    <div><b>Date</b>15 novembre 2026</div>
+    <div><b>Dépôt</b>github.com/siaoctawacta/Webscrapper</div>
+    <div><b>Public</b>Administrateur technique</div>
+  </div>
+</section>
+
+<section class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li>Vue d’ensemble <span>composants, technologies</span></li>
+    <li>Prérequis <span>serveur, domaine, comptes</span></li>
+    <li>Mettre l’application en ligne <span>pas à pas, environ 45 minutes</span></li>
+    <li>Configurer Google Maps Platform <span>clé, restrictions, coûts</span></li>
+    <li>Configurer l’IA (Vercel AI Gateway) <span>facultatif</span></li>
+    <li>Référence de configuration <span>toutes les variables</span></li>
+    <li>Architecture <span>flux, données, règles Google</span></li>
+    <li>Exploitation au quotidien <span>mises à jour, sauvegardes, journaux</span></li>
+    <li>Sécurité <span>liste de contrôle</span></li>
+    <li>Dépannage <span>problèmes fréquents</span></li>
+    <li>Développement et tests <span>poste local</span></li>
+    <li>Limites connues et aide-mémoire <span>commandes utiles</span></li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<section class="chapter">
+  <h2><span class="num">01</span>Vue d’ensemble</h2>
+  <p class="intro">LeadFinder trouve des entreprises à partir d’un lien Google Maps (ou d’un mot-clé et d’un lieu), sépare celles qui ont un site web de celles qui n’en ont pas, puis aide à les démarcher : collections de prospects, propositions par e-mail ou WhatsApp, maquettes de page d’accueil générées par IA et exports Excel/CSV.</p>
+
+  <h3>Les quatre composants en production</h3>
+  <div class="diagram">
+    <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="Geist, Inter, sans-serif" font-size="12">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#71717a"/></marker></defs>
+      <rect x="10" y="95" width="120" height="56" rx="10" fill="#fff" stroke="#d4d4d8"/>
+      <text x="70" y="119" text-anchor="middle" font-weight="600">Navigateur</text>
+      <text x="70" y="137" text-anchor="middle" fill="#71717a" font-size="11">vous et votre équipe</text>
+      <rect x="175" y="95" width="130" height="56" rx="10" fill="#eef0ff" stroke="#c7cbff"/>
+      <text x="240" y="119" text-anchor="middle" font-weight="600">Caddy</text>
+      <text x="240" y="137" text-anchor="middle" fill="#4f46e5" font-size="11">HTTPS · ports 80/443</text>
+      <rect x="350" y="40" width="150" height="56" rx="10" fill="#fff" stroke="#d4d4d8"/>
+      <text x="425" y="64" text-anchor="middle" font-weight="600">web (Next.js)</text>
+      <text x="425" y="82" text-anchor="middle" fill="#71717a" font-size="11">pages + API /api/v1</text>
+      <rect x="350" y="155" width="150" height="56" rx="10" fill="#fff" stroke="#d4d4d8"/>
+      <text x="425" y="179" text-anchor="middle" font-weight="600">worker</text>
+      <text x="425" y="197" text-anchor="middle" fill="#71717a" font-size="11">recherches, exports</text>
+      <rect x="560" y="95" width="130" height="56" rx="10" fill="#fff" stroke="#d4d4d8"/>
+      <text x="625" y="119" text-anchor="middle" font-weight="600">PostgreSQL</text>
+      <text x="625" y="137" text-anchor="middle" fill="#71717a" font-size="11">données + file d’attente</text>
+      <line x1="130" y1="123" x2="172" y2="123" stroke="#71717a" marker-end="url(#a)"/>
+      <line x1="305" y1="115" x2="347" y2="80" stroke="#71717a" marker-end="url(#a)"/>
+      <line x1="500" y1="70" x2="557" y2="110" stroke="#71717a" marker-end="url(#a)"/>
+      <line x1="500" y1="182" x2="557" y2="138" stroke="#71717a" marker-end="url(#a)"/>
+      <line x1="425" y1="96" x2="425" y2="152" stroke="#a1a1aa" stroke-dasharray="4 4"/>
+      <text x="433" y="128" fill="#71717a" font-size="10.5">fichiers d’export partagés</text>
+      <rect x="560" y="10" width="190" height="40" rx="8" fill="#fafafa" stroke="#e4e4e7"/>
+      <text x="655" y="34" text-anchor="middle" fill="#52525b" font-size="11">Google Places API · AI Gateway</text>
+      <line x1="500" y1="55" x2="557" y2="35" stroke="#a1a1aa" marker-end="url(#a)"/>
+      <rect x="560" y="200" width="190" height="40" rx="8" fill="#fafafa" stroke="#e4e4e7"/>
+      <text x="655" y="224" text-anchor="middle" fill="#52525b" font-size="11">sites web des entreprises</text>
+      <line x1="500" y1="200" x2="557" y2="218" stroke="#a1a1aa" marker-end="url(#a)"/>
+    </svg>
+  </div>
+  <table>
+    <thead><tr><th style="width:24%">Composant</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td>web</td><td>L’application Next.js : pages, connexion, API REST (<code>/api/v1/…</code>). Démarre les recherches et les exports en les plaçant dans une file d’attente.</td></tr>
+      <tr><td>worker</td><td>Processus d’arrière-plan : exécute les recherches (Google ou données d’exemple), visite les sites des entreprises pour trouver e-mails et réseaux sociaux, génère les gros exports, fait le ménage toutes les 10 minutes (suppression des résultats Google expirés, des fichiers d’export périmés…).</td></tr>
+      <tr><td>PostgreSQL 16</td><td>Toutes les données (utilisateurs, recherches, collections, propositions, maquettes, journaux) et la file d’attente des tâches (pg-boss).</td></tr>
+      <tr><td>Caddy</td><td>Reverse proxy devant l’application : certificat HTTPS automatique (Let’s Encrypt) et adresse IP du visiteur fiable pour les limites anti-abus.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 class="pb">Technologies</h3>
+  <table>
+    <thead><tr><th style="width:24%">Couche</th><th>Choix</th></tr></thead>
+    <tbody>
+      <tr><td>Interface et API</td><td>Next.js 16 (App Router), React 19, TypeScript strict, Tailwind CSS 4</td></tr>
+      <tr><td>Base de données</td><td>PostgreSQL 16 + Drizzle ORM (migrations SQL versionnées dans <code>drizzle/</code>)</td></tr>
+      <tr><td>Authentification</td><td>Better Auth (e-mail + mot de passe, sessions en base)</td></tr>
+      <tr><td>Tâches d’arrière-plan</td><td>pg-boss (file d’attente stockée dans PostgreSQL, pas de Redis à gérer)</td></tr>
+      <tr><td>Données d’entreprises</td><td>Google Places API (New) — ou mode « données d’exemple » sans clé</td></tr>
+      <tr><td>IA</td><td>AI SDK 7 via Vercel AI Gateway (modèle par défaut <code>anthropic/claude-sonnet-5.5</code>)</td></tr>
+      <tr><td>Exports</td><td>exceljs (XLSX), CSV UTF-8</td></tr>
+      <tr><td>Tests</td><td>Vitest (≈ 1 100 tests sur une vraie base PostgreSQL), Playwright (parcours complet dans un navigateur)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 2 -->
+<section class="chapter">
+  <h2><span class="num">02</span>Prérequis</h2>
+  <p class="intro">Ce qu’il faut réunir avant de commencer. La méthode recommandée — un petit serveur virtuel (VPS) avec Docker — fonctionne chez n’importe quel hébergeur et garde vos données chez vous.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Un serveur (VPS)</h4>
+      <ul>
+        <li>Ubuntu 24.04 LTS</li>
+        <li>2 vCPU, 4 Go de RAM, 40 Go de disque (minimum confortable)</li>
+        <li>Adresse IPv4 publique</li>
+        <li>Hébergeurs possibles : Hetzner, OVHcloud, DigitalOcean, Scaleway, Contabo… (comptez en général 5 à 15 € par mois ; vérifiez les tarifs actuels)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Un nom de domaine</h4>
+      <ul>
+        <li>Par exemple <code>leads.mon-agence.com</code></li>
+        <li>Accès à la zone DNS pour créer un enregistrement <code>A</code></li>
+        <li>Indispensable pour le HTTPS automatique</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Google Cloud (pour les vraies données)</h4>
+      <ul>
+        <li>Un compte Google Cloud avec facturation activée</li>
+        <li>L’API « Places API (New) » (voir chapitre 4)</li>
+        <li>Sans clé, l’application tourne en mode « données d’exemple »</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Vercel AI Gateway (facultatif)</h4>
+      <ul>
+        <li>Un compte Vercel et une clé AI Gateway (chapitre 5)</li>
+        <li>Sans clé, propositions et maquettes utilisent des modèles intégrés</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout note"><b>Pourquoi un VPS plutôt qu’une plateforme « tout-en-un » ?</b>
+    <p>LeadFinder a besoin de deux processus qui tournent en permanence (web et worker) et d’un dossier partagé entre eux pour les fichiers d’export. Les plateformes serverless (Vercel, Netlify…) ne conviennent pas au worker. Les plateformes à conteneurs (Railway, Render, Fly.io) fonctionnent à condition de lancer web et worker dans le <em>même</em> service ou de partager un disque : c’est possible mais moins simple. Le VPS avec Docker Compose est la voie testée et documentée ici.</p>
+  </div>
+
+  <div class="callout warn"><b>Avant de mettre en ligne</b>
+    <p>La configuration Docker a été écrite avec soin et les commandes qu’elle lance ont été exécutées et testées, mais l’image Docker elle-même n’a pas pu être construite dans l’environnement de développement (pas de démon Docker). Faites la première installation sur un serveur de test ou suivez attentivement l’étape « Vérifier » du chapitre 3.</p>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="chapter">
+  <h2><span class="num">03</span>Mettre l’application en ligne</h2>
+  <p class="intro">Installation complète sur un VPS Ubuntu avec Docker Compose. Remplacez <code>leads.mon-agence.com</code> par votre domaine et <code>203.0.113.10</code> par l’adresse IP de votre serveur.</p>
+
+  <h3>Étape 1 — Pointer le domaine vers le serveur</h3>
+  <p>Dans la zone DNS de votre domaine, créez un enregistrement :</p>
+  <table>
+    <thead><tr><th>Type</th><th>Nom</th><th>Valeur</th><th>TTL</th></tr></thead>
+    <tbody><tr><td>A</td><td>leads</td><td>203.0.113.10</td><td>300</td></tr></tbody>
+  </table>
+  <p class="muted small">La propagation prend de quelques minutes à quelques heures. Vérifiez avec <code>ping leads.mon-agence.com</code> : la réponse doit venir de l’IP de votre serveur.</p>
+
+  <h3>Étape 2 — Préparer le serveur</h3>
+  <p>Connectez-vous en SSH puis mettez le système à jour et activez le pare-feu :</p>
+<pre>ssh root@203.0.113.10
+
+apt update &amp;&amp; apt upgrade -y
+<span class="c"># Pare-feu : SSH, HTTP et HTTPS uniquement</span>
+ufw allow OpenSSH &amp;&amp; ufw allow 80/tcp &amp;&amp; ufw allow 443/tcp &amp;&amp; ufw --force enable
+
+<span class="c"># Un utilisateur dédié (évitez de tout faire en root)</span>
+adduser deploy &amp;&amp; usermod -aG sudo deploy</pre>
+
+  <h3>Étape 3 — Installer Docker</h3>
+<pre><span class="c"># Script officiel d’installation de Docker Engine + Compose</span>
+curl -fsSL https://get.docker.com | sh
+usermod -aG docker deploy
+
+<span class="c"># Reconnectez-vous en tant que deploy, puis vérifiez :</span>
+docker --version &amp;&amp; docker compose version</pre>
+
+  <h3>Étape 4 — Récupérer le code</h3>
+<pre>cd ~
+git clone https://github.com/siaoctawacta/Webscrapper.git leadfinder
+cd leadfinder</pre>
+
+  <h3>Étape 5 — Créer le fichier de configuration <code>.env</code></h3>
+  <p>Copiez le modèle puis générez les secrets :</p>
+<pre>cp .env.example .env
+
+openssl rand -base64 32   <span class="c"># → BETTER_AUTH_SECRET</span>
+openssl rand -hex 24      <span class="c"># → SETUP_TOKEN</span>
+openssl rand -hex 24      <span class="c"># → POSTGRES_PASSWORD (lettres et chiffres uniquement)</span>
+
+nano .env</pre>
+  <p>Valeurs minimales à renseigner (les autres ont des valeurs par défaut raisonnables, voir chapitre 6) :</p>
+<pre>APP_ENV=production
+APP_URL=https://leads.mon-agence.com
+DOMAIN=leads.mon-agence.com
+
+BETTER_AUTH_SECRET=&lt;le premier secret généré&gt;
+SETUP_TOKEN=&lt;le deuxième secret&gt;
+POSTGRES_PASSWORD=&lt;le troisième secret&gt;
+
+SIGNUP_MODE=invite
+GOOGLE_MAPS_API_KEY=&lt;votre clé Google, ou vide pour le mode exemple&gt;
+AI_GATEWAY_API_KEY=&lt;votre clé AI Gateway, ou vide&gt;</pre>
+  <div class="callout danger"><b>Important</b>
+    <ul>
+      <li>Ne laissez aucune valeur <code>&lt;managed-secret&gt;</code> : remplacez-les toutes ou videz-les.</li>
+      <li><code>POSTGRES_PASSWORD</code> est fixé à la première création de la base : changez-le <em>avant</em> le premier lancement.</li>
+      <li>Ne versionnez jamais le fichier <code>.env</code> (il est déjà exclu par <code>.gitignore</code>).</li>
+    </ul>
+  </div>
+
+  <h3>Étape 6 — Lancer</h3>
+<pre>docker compose up -d --build</pre>
+  <p>Docker construit l’image, démarre PostgreSQL, applique les migrations de la base (service <code>migrate</code>), puis lance <code>web</code>, <code>worker</code> et le proxy <code>proxy</code> (Caddy). Caddy obtient le certificat HTTPS automatiquement dès que le DNS pointe vers le serveur.</p>
+<pre>docker compose ps                       <span class="c"># tous les services "running" (migrate "exited (0)")</span>
+docker compose logs -f web worker proxy <span class="c"># Ctrl+C pour quitter</span></pre>
+  <p>Dans les journaux du worker vous devez voir <code>[worker] ready — search concurrency 4</code>.</p>
+
+  <h3>Étape 7 — Créer le compte administrateur</h3>
+  <p>Ouvrez dans votre navigateur :</p>
+<pre>https://leads.mon-agence.com/sign-up?setup=&lt;votre SETUP_TOKEN&gt;</pre>
+  <p>Le premier compte créé avec ce lien devient l’administrateur. Sans le bon jeton, la création du premier compte est refusée en production — personne ne peut prendre la place de l’administrateur en s’inscrivant avant vous.</p>
+
+  <h3>Étape 8 — Inviter l’équipe</h3>
+  <p>Dans <strong>Admin → Invitations</strong>, saisissez l’e-mail de la personne et son rôle, puis copiez le <strong>lien d’invitation personnel</strong> affiché (il n’est montré qu’une fois) et envoyez-le-lui. Avec <code>SIGNUP_MODE=approval</code>, n’importe qui peut aussi s’inscrire mais doit être approuvé dans <strong>Admin → Users</strong>.</p>
+
+  <h3>Étape 9 — Vérifier</h3>
+  <ol class="steps">
+    <li>Ouvrez <code>https://leads.mon-agence.com</code> : le cadenas HTTPS s’affiche et la page de connexion apparaît.</li>
+    <li>Lancez une petite recherche (20 résultats) avec un lien Google Maps. Elle doit passer à <em>Completed</em> en moins d’une minute.</li>
+    <li>Sans clé Google, un bandeau jaune « Sample data mode » est affiché : les entreprises sont fictives. Avec une clé, vérifiez que les noms correspondent bien à ce que montre Google Maps.</li>
+    <li>Enregistrez quelques résultats dans une collection, puis faites un export Excel : le fichier doit se télécharger.</li>
+  </ol>
+
+  <div class="callout tip"><b>Sans nom de domaine (test rapide)</b>
+    <p>Laissez <code>DOMAIN</code> vide et mettez <code>APP_URL=http://203.0.113.10</code> : l’application est servie en HTTP simple sur le port 80. À réserver aux essais : sans HTTPS, les mots de passe circulent en clair.</p>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="chapter">
+  <h2><span class="num">04</span>Configurer Google Maps Platform</h2>
+  <p class="intro">LeadFinder interroge Google uniquement via l’API officielle « Places API (New) ». Il ne lit jamais les pages de Google Maps. Chaque requête est facturée sur votre compte Google Cloud.</p>
+
+  <h3>Créer la clé</h3>
+  <ol class="steps">
+    <li>Allez sur <code>console.cloud.google.com</code>, créez un projet (par ex. « LeadFinder ») et associez-lui un compte de facturation.</li>
+    <li>Menu <strong>APIs &amp; Services → Library</strong> : cherchez <strong>Places API (New)</strong> et cliquez sur <strong>Enable</strong>. (L’ancienne « Places API » ne suffit pas.)</li>
+    <li><strong>APIs &amp; Services → Credentials → Create credentials → API key</strong>.</li>
+    <li>Restreignez la clé : <em>API restrictions</em> → uniquement <strong>Places API (New)</strong> ; <em>Application restrictions</em> → <strong>IP addresses</strong> → l’IP publique de votre serveur.</li>
+    <li>Dans <strong>Billing → Budgets &amp; alerts</strong>, créez un budget mensuel avec alertes (par ex. à 50 %, 90 % et 100 %).</li>
+    <li>Copiez la clé dans <code>GOOGLE_MAPS_API_KEY</code> du fichier <code>.env</code>, puis <code>docker compose up -d</code>.</li>
+  </ol>
+
+  <h3>Comprendre les coûts</h3>
+  <p>Google renvoie au maximum 20 résultats par requête et environ 60 par recherche. Pour aller au-delà, LeadFinder découpe automatiquement la zone de carte en carrés plus petits (jusqu’à ~300 m de côté) et interroge chacun. Les estimations ci-dessous sont calculées par l’application avec le prix configuré (<code>GOOGLE_TEXT_SEARCH_PRICE_PER_1000</code>, 35 $ par défaut). Le nombre réel dépend de la densité de la zone.</p>
+  <table>
+    <thead><tr><th>Résultats demandés</th><th>Requêtes estimées</th><th>Coût estimé</th></tr></thead>
+    <tbody>
+      <tr><td>20</td><td>1</td><td>≈ 0,04 $</td></tr>
+      <tr><td>100</td><td>12</td><td>≈ 0,42 $</td></tr>
+      <tr><td>500</td><td>44</td><td>≈ 1,54 $</td></tr>
+      <tr><td>1 000</td><td>84</td><td>≈ 2,94 $</td></tr>
+      <tr><td>5 000</td><td>404</td><td>≈ 14 $</td></tr>
+      <tr><td>20 000</td><td>1 604</td><td>≈ 56 $</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Google accorde un quota mensuel gratuit (de l’ordre de 1 000 requêtes Text Search Enterprise par mois au moment de la rédaction) : vérifiez la page de tarification officielle, qui évolue.</li>
+    <li>Au-delà de <code>COST_CONFIRM_THRESHOLD_USD</code> (5 $ par défaut), l’application demande une confirmation avant de lancer la recherche.</li>
+    <li>Chaque utilisateur a une limite mensuelle de requêtes facturables (<code>MONTHLY_PROVIDER_REQUEST_LIMIT_PER_USER</code>, 5 000 par défaut, ajustable par personne dans <strong>Admin</strong>).</li>
+    <li>Toutes les requêtes et leur coût estimé apparaissent dans <strong>Admin → Usage</strong>. La facture réelle est celle de Google Cloud.</li>
+  </ul>
+
+  <h3>Ce que l’application conserve (conditions de Google)</h3>
+  <table>
+    <thead><tr><th style="width:30%">Donnée Google</th><th>Traitement</th></tr></thead>
+    <tbody>
+      <tr><td>Résultats de recherche</td><td>Conservés <code>GOOGLE_RESULTS_RETENTION_HOURS</code> heures (24 par défaut) pour trier, filtrer et choisir, puis supprimés automatiquement.</td></tr>
+      <tr><td>Prospects enregistrés</td><td>Seuls l’identifiant du lieu et le lien Google Maps sont stockés. Nom, téléphone, adresse, note… sont <strong>rechargés en direct</strong> à l’affichage d’une collection (requête « Place Details » facturée, comptée dans la limite mensuelle).</td></tr>
+      <tr><td>Exports</td><td>Pour les lignes Google : lien Maps, identifiant du lieu et vos propres données (e-mails trouvés sur les sites, statut, tags, notes). Les champs Google sont laissés vides avec l’explication dans la feuille « Data Quality ».</td></tr>
+      <tr><td>Toujours conservé</td><td>Ce qui vous appartient : e-mails et réseaux sociaux publiés sur le site de l’entreprise, état du site, statuts, tags, notes, propositions, maquettes.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout note"><b>Changer cette règle</b>
+    <p>Si vous disposez d’un autre accord avec Google ou d’un fournisseur de données sous licence autorisant le stockage et l’export, la règle se modifie à un seul endroit : <code>src/server/providers/policy.ts</code>. Faites-le en connaissance de cause.</p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="chapter">
+  <h2><span class="num">05</span>Configurer l’IA (Vercel AI Gateway)</h2>
+  <p class="intro">L’IA sert à « polir » les propositions et à rédiger les maquettes de page d’accueil. Elle est facultative : sans clé, des modèles de texte intégrés (anglais et français) sont utilisés.</p>
+  <ol class="steps">
+    <li>Créez un compte sur <code>vercel.com</code>, ouvrez <strong>AI Gateway</strong> et créez une clé API.</li>
+    <li>Renseignez <code>AI_GATEWAY_API_KEY</code> dans <code>.env</code>. Optionnel : <code>AI_MODEL</code> (par défaut <code>anthropic/claude-sonnet-5.5</code>, tout modèle proposé par la passerelle fonctionne).</li>
+    <li>Ajustez <code>AI_DAILY_LIMIT_PER_USER</code> (50 générations par personne et par jour par défaut).</li>
+    <li>Redémarrez : <code>docker compose up -d</code>. L’interrupteur « Polish with AI » devient actif.</li>
+  </ol>
+  <h3>Garde-fous</h3>
+  <ul>
+    <li>L’IA ne reçoit que des faits connus sur l’entreprise, placés dans un bloc de données qu’elle doit traiter comme non fiable (protection contre l’injection de consignes via le texte d’un site).</li>
+    <li>Les réponses sont validées par schéma. Une proposition réécrite qui invente des chiffres, des liens ou des e-mails, ou qui perd la signature, est rejetée et remplacée par le modèle intégré.</li>
+    <li>Les maquettes sont rendues en HTML statique sûr : tout texte est échappé, aucun script, politique de sécurité de contenu stricte.</li>
+  </ul>
+</section>
+
+<!-- 6 -->
+<section class="chapter">
+  <h2><span class="num">06</span>Référence de configuration</h2>
+  <p class="intro">Toutes les variables du fichier <code>.env</code>. Celles marquées ★ sont à définir en production.</p>
+  <table class="config">
+    <thead><tr><th style="width:47%">Variable</th><th>Rôle</th><th style="width:16%">Défaut</th></tr></thead>
+    <tbody>
+      <tr><td><code>APP_ENV</code> ★</td><td><code>production</code> sur le serveur.</td><td>development</td></tr>
+      <tr><td><code>APP_URL</code> ★</td><td>Adresse publique (https://…). Sert aux liens d’invitation, aux liens de partage et à la protection CSRF.</td><td>http://localhost:3000</td></tr>
+      <tr><td><code>DOMAIN</code></td><td>Docker : domaine pour le HTTPS automatique de Caddy. Vide = HTTP sur le port 80.</td><td>—</td></tr>
+      <tr><td><code>BETTER_AUTH_SECRET</code> ★</td><td>Secret de signature des sessions (32 caractères ou plus).</td><td>—</td></tr>
+      <tr><td><code>SETUP_TOKEN</code> ★</td><td>Jeton requis pour créer le premier compte administrateur (<code>/sign-up?setup=…</code>).</td><td>—</td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>Connexion PostgreSQL (calculée automatiquement par Docker Compose). Pour Supabase : chaîne « Session pooler » suivie de <code>?uselibpqcompat=true&amp;sslmode=require</code> (voir chapitre 8).</td><td>local</td></tr>
+      <tr><td><code>DB_POOL_MAX</code></td><td>Connexions à la base gardées ouvertes par l’application web et par le worker. À baisser (ex. 5) sur les offres hébergées limitées.</td><td>10</td></tr>
+      <tr><td><code>QUEUE_POOL_MAX</code></td><td>Connexions supplémentaires utilisées par la file d’attente (pg-boss).</td><td>4</td></tr>
+      <tr><td><code>POSTGRES_PASSWORD</code> ★</td><td>Docker : mot de passe de la base intégrée.</td><td>leadfinder</td></tr>
+      <tr><td><code>SIGNUP_MODE</code></td><td><code>approval</code> (inscription libre, approbation admin), <code>invite</code> (lien d’invitation obligatoire), <code>closed</code>.</td><td>approval</td></tr>
+      <tr><td><code>CLIENT_IP_HEADER</code></td><td>En-tête contenant l’IP du visiteur. Garder la valeur par défaut derrière Caddy ; <code>cf-connecting-ip</code> derrière Cloudflare.</td><td>x-forwarded-for</td></tr>
+      <tr><td><code>TRUSTED_PROXY_HOPS</code></td><td>Nombre de proxys de confiance devant l’application.</td><td>1</td></tr>
+      <tr><td><code>GOOGLE_MAPS_API_KEY</code></td><td>Clé Places API (New). Vide = mode données d’exemple.</td><td>—</td></tr>
+      <tr><td><code>GOOGLE_TEXT_SEARCH_PRICE_PER_1000</code></td><td>Prix utilisé pour les estimations (Text Search).</td><td>35</td></tr>
+      <tr><td><code>GOOGLE_PLACE_DETAILS_PRICE_PER_1000</code></td><td>Prix utilisé pour les rechargements en direct.</td><td>20</td></tr>
+      <tr><td><code>GOOGLE_RESULTS_RETENTION_HOURS</code></td><td>Durée de conservation des résultats Google.</td><td>24</td></tr>
+      <tr><td><code>AI_GATEWAY_API_KEY</code></td><td>Clé Vercel AI Gateway. Vide = modèles intégrés.</td><td>—</td></tr>
+      <tr><td><code>AI_MODEL</code></td><td>Modèle utilisé via la passerelle.</td><td>anthropic/claude-sonnet-5.5</td></tr>
+      <tr><td><code>AI_DAILY_LIMIT_PER_USER</code></td><td>Générations IA par personne et par 24 h.</td><td>50</td></tr>
+      <tr><td><code>MAX_RESULTS_PER_SEARCH</code></td><td>Plafond de résultats par recherche (ajustable par personne).</td><td>20000</td></tr>
+      <tr><td><code>MAX_SEARCH_JOBS_PER_USER_PER_DAY</code></td><td>Recherches par personne sur 24 h (0 = illimité).</td><td>50</td></tr>
+      <tr><td><code>MAX_CONCURRENT_JOBS_PER_USER</code></td><td>Recherches simultanées par personne.</td><td>2</td></tr>
+      <tr><td><code>MAX_CONCURRENT_JOBS</code></td><td>Recherches exécutées en parallèle par le worker.</td><td>4</td></tr>
+      <tr><td><code>COST_CONFIRM_THRESHOLD_USD</code></td><td>Coût estimé au-delà duquel une confirmation est demandée.</td><td>5</td></tr>
+      <tr><td><code>MONTHLY_PROVIDER_REQUEST_LIMIT_PER_USER</code></td><td>Requêtes Google facturables par personne et par mois (0 = illimité).</td><td>5000</td></tr>
+      <tr><td><code>CRAWL_CONCURRENCY</code></td><td>Sites d’entreprises visités en parallèle.</td><td>8</td></tr>
+      <tr><td><code>CRAWL_TIMEOUT_MS</code></td><td>Délai maximal par page visitée.</td><td>10000</td></tr>
+      <tr><td><code>CRAWL_MAX_PAGES_PER_SITE</code></td><td>Pages lues par site (accueil + contact/à propos).</td><td>3</td></tr>
+      <tr><td><code>EXPORT_STORAGE_DIR</code></td><td>Dossier des fichiers d’export (volume partagé web/worker).</td><td>./storage/exports</td></tr>
+      <tr><td><code>EXPORT_LINK_TTL_MINUTES</code></td><td>Durée de validité d’un lien de téléchargement.</td><td>15</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Après toute modification du fichier <code>.env</code> : <code>docker compose up -d</code> (les services concernés redémarrent).</p>
+</section>
+
+<!-- 7 -->
+<section class="chapter">
+  <h2><span class="num">07</span>Architecture</h2>
+  <p class="intro">Le dépôt est un seul projet TypeScript. Le contrat entre les modules est décrit dans <code>docs/ARCHITECTURE.md</code> ; ce chapitre en résume l’essentiel.</p>
+
+  <h3>Déroulement d’une recherche</h3>
+  <ol class="steps">
+    <li><strong>Lecture du lien.</strong> <code>src/server/maps-link</code> extrait le terme recherché et la zone visible du lien Google Maps (ex. <code>/maps/search/hôtel/@6.14,1.16,12z</code> → « hôtel », zone de ≈ 49 × 30 km). Les liens courts <code>maps.app.goo.gl</code> sont résolus en suivant uniquement des redirections vers des domaines Google, sans lire de page.</li>
+    <li><strong>Création.</strong> L’API valide la demande, applique les limites (verrou par utilisateur pour éviter les dépassements en parallèle), estime le coût, enregistre la recherche et la place dans la file <code>search.run</code>.</li>
+    <li><strong>Exécution (worker).</strong> Le fournisseur (Google ou exemple) renvoie les résultats page par page ; au-delà de 60, la zone est découpée en quadrillage adaptatif. Chaque résultat est normalisé (téléphone au format international, site, qualité) et dédoublonné par identifiant Google.</li>
+    <li><strong>Enrichissement.</strong> Pour chaque entreprise qui a un site, <code>src/server/enrichment</code> visite la page d’accueil et au plus deux pages contact/à propos : e-mails publiés, réseaux sociaux, HTTPS, compatibilité mobile, année du ©. Respect de robots.txt, une requête à la fois par site, blocage des adresses réseau privées (anti-SSRF).</li>
+    <li><strong>Finalisation.</strong> Détection des doublons probables (même téléphone, même site, ou nom très proche à moins de 80 m), statut final et date d’expiration des résultats.</li>
+  </ol>
+
+  <h3>Organisation du code</h3>
+<pre>src/
+├── app/              pages (Next.js) et API REST /api/v1/…
+├── components/       interface : grille, fiches, dialogues
+├── lib/              contrat partagé : champs, filtres/tris autorisés, types
+├── server/
+│   ├── auth/         connexion, règles d’inscription, jetons
+│   ├── maps-link/    lecture des liens Google Maps
+│   ├── providers/    Google Places, données d’exemple, règle de conservation (policy.ts)
+│   ├── enrichment/   visite des sites (e-mails, réseaux sociaux)
+│   ├── search/       recherches, quotas, worker, maintenance
+│   ├── collections/  prospects, actions groupées, rechargement en direct
+│   ├── exports/      XLSX/CSV, protection contre l’injection de formules
+│   ├── proposals/ ai/ concepts/ admin/ settings/
+├── worker/           processus d’arrière-plan
+└── scripts/          outils serveur (réinitialisation de mot de passe)
+drizzle/              migrations SQL</pre>
+
+  <h3>Principales tables</h3>
+  <table>
+    <thead><tr><th style="width:26%">Table</th><th>Contenu</th></tr></thead>
+    <tbody>
+      <tr><td>user, session, account</td><td>Comptes (rôle admin/member, statut pending/active/disabled), sessions, mots de passe hachés.</td></tr>
+      <tr><td>invitations</td><td>Invitations ; le jeton du lien n’est stocké que sous forme de hachage.</td></tr>
+      <tr><td>search_jobs, job_events</td><td>Recherches, progression, coûts estimés, historique.</td></tr>
+      <tr><td>search_results</td><td>Résultats temporaires d’une recherche (purgés après expiration pour Google).</td></tr>
+      <tr><td>businesses, collections, leads</td><td>Entreprises enregistrées (selon la règle de conservation), collections, prospects avec statut, tags et notes.</td></tr>
+      <tr><td>proposals, concepts</td><td>Historique des propositions, maquettes de page d’accueil et liens de partage.</td></tr>
+      <tr><td>exports</td><td>Exports, fichiers, jetons de téléchargement hachés.</td></tr>
+      <tr><td>usage_logs, audit_logs, rate_limits</td><td>Consommation et coûts, journal d’audit, compteurs anti-abus.</td></tr>
+      <tr><td>pgboss.*</td><td>File d’attente des tâches (gérée par pg-boss).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 8 -->
+<section class="chapter">
+  <h2><span class="num">08</span>Exploitation au quotidien</h2>
+
+  <h3>Mettre à jour l’application</h3>
+<pre>cd ~/leadfinder
+git pull
+docker compose up -d --build   <span class="c"># reconstruit l’image ; les migrations s’appliquent automatiquement</span>
+docker compose ps</pre>
+  <p class="muted small">Le service <code>migrate</code> applique les nouvelles migrations de base de données avant le redémarrage de web et worker. Faites une sauvegarde juste avant une mise à jour importante.</p>
+
+  <h3>Sauvegarder la base de données</h3>
+<pre><span class="c"># Sauvegarde ponctuelle (fichier compressé daté)</span>
+mkdir -p ~/backups
+docker compose exec -T db pg_dump -U leadfinder leadfinder | gzip &gt; ~/backups/leadfinder-$(date +%F).sql.gz
+
+<span class="c"># Sauvegarde quotidienne à 3 h du matin (crontab -e) et conservation 14 jours</span>
+0 3 * * * cd ~/leadfinder &amp;&amp; docker compose exec -T db pg_dump -U leadfinder leadfinder | gzip &gt; ~/backups/leadfinder-$(date +\%F).sql.gz &amp;&amp; find ~/backups -name '*.sql.gz' -mtime +14 -delete</pre>
+  <p>Copiez régulièrement les sauvegardes hors du serveur (stockage objet, autre machine). Les fichiers d’export sont temporaires (24 h) et n’ont pas besoin d’être sauvegardés.</p>
+
+  <h3>Restaurer une sauvegarde</h3>
+<pre>docker compose stop web worker
+gunzip -c ~/backups/leadfinder-2026-11-15.sql.gz | docker compose exec -T db psql -U leadfinder -d leadfinder
+docker compose start web worker</pre>
+  <p class="muted small">Pour une restauration complète, restaurez dans une base vide (recréez le volume <code>pgdata</code> ou une nouvelle base) afin d’éviter les conflits.</p>
+
+  <h3>Journaux et surveillance</h3>
+<pre>docker compose logs -f --tail=200 web worker   <span class="c"># journaux en direct</span>
+docker compose logs proxy | tail -50            <span class="c"># HTTPS / certificats</span>
+docker stats                                    <span class="c"># CPU et mémoire</span>
+df -h                                           <span class="c"># espace disque</span></pre>
+  <ul>
+    <li>Configurez une surveillance de disponibilité (UptimeRobot, Better Stack…) sur <code>https://votre-domaine/sign-in</code>.</li>
+    <li>Le worker n’a pas de page web : surveillez ses journaux. Une recherche bloquée en « Queued » signifie que le worker ne tourne pas.</li>
+    <li><strong>Admin → Audit log</strong> trace les recherches, enregistrements, exports, téléchargements et actions d’administration.</li>
+  </ul>
+
+  <h3>Réinitialiser le mot de passe d’un utilisateur</h3>
+  <p>L’application n’envoie pas d’e-mails, il n’y a donc pas de lien « mot de passe oublié ». Depuis le serveur :</p>
+<pre>docker compose exec web node_modules/.bin/tsx --tsconfig tsconfig.worker.json \
+  src/scripts/set-password.ts personne@exemple.com 'nouveau-mot-de-passe-10-car'</pre>
+  <p class="muted small">La personne est déconnectée de tous ses appareils. Communiquez-lui le nouveau mot de passe par un canal sûr et demandez-lui de le changer.</p>
+
+  <h3>Monter en charge</h3>
+  <ul>
+    <li>Plus de recherches simultanées : augmentez <code>MAX_CONCURRENT_JOBS</code> et la mémoire du serveur.</li>
+    <li>Un second worker sur la même machine : <code>docker compose up -d --scale worker=2</code> (les tâches sont réparties automatiquement).</li>
+    <li>PostgreSQL géré (Neon, Supabase, RDS…) : renseignez son <code>DATABASE_URL</code> dans les services et retirez le service <code>db</code>.</li>
+  </ul>
+
+  <h3>Utiliser Supabase comme base de données</h3>
+  <ol class="steps">
+    <li>Dans Supabase, ouvrez <strong>Connect</strong> et copiez la chaîne <strong>Session pooler</strong> (hôte <code>aws-…pooler.supabase.com</code>, port 5432, utilisateur <code>postgres.&lt;ref&gt;</code>). N’utilisez pas la « Direct connection » <code>db.&lt;ref&gt;.supabase.co</code> : elle ne répond qu’en IPv6, et la plupart des box et de nombreux serveurs échouent avec <code>getaddrinfo ENOTFOUND</code>.</li>
+    <li>Remplacez <code>[YOUR-PASSWORD]</code> par le mot de passe de la base (caractères spéciaux encodés : <code>@</code> → <code>%40</code>, <code>#</code> → <code>%23</code>, <code>/</code> → <code>%2F</code>) et ajoutez <code>?uselibpqcompat=true&amp;sslmode=require</code> à la fin.</li>
+    <li>Appliquez les migrations, puis redémarrez l’application et le worker.</li>
+  </ol>
+<pre>DATABASE_URL=postgresql://postgres.&lt;ref&gt;:&lt;mot-de-passe&gt;@aws-0-&lt;region&gt;.pooler.supabase.com:5432/postgres?uselibpqcompat=true&amp;sslmode=require
+DB_POOL_MAX=5
+QUEUE_POOL_MAX=4</pre>
+  <p class="muted small">En local, <code>pnpm dev</code>, <code>pnpm worker</code>, <code>pnpm db:migrate</code> et <code>pnpm user:set-password</code> lisent <code>.env.local</code> puis <code>.env</code>. Un projet Supabase gratuit se met en pause après une semaine d’inactivité : réactivez-le depuis le tableau de bord.</p>
+</section>
+
+<!-- 9 -->
+<section class="chapter">
+  <h2><span class="num">09</span>Sécurité</h2>
+  <p class="intro">Mesures intégrées à l’application, puis ce qui reste de votre responsabilité.</p>
+  <h3>Déjà en place</h3>
+  <ul>
+    <li><strong>Accès :</strong> aucune adresse e-mail seule ne donne de droits. Premier administrateur via <code>SETUP_TOKEN</code> ; invitations par lien secret à usage unique lié à l’e-mail ; nouveaux comptes en attente d’approbation selon <code>SIGNUP_MODE</code>.</li>
+    <li><strong>Connexion :</strong> mots de passe hachés, limite de tentatives par compte (10 par 15 min) et par IP, comptes désactivés bloqués immédiatement (sessions supprimées, recherches annulées).</li>
+    <li><strong>Données :</strong> chaque requête vérifie que la ressource appartient à l’utilisateur ; tris et filtres sur liste blanche ; requêtes SQL paramétrées.</li>
+    <li><strong>Visites de sites :</strong> robots.txt respecté, adresses réseau privées bloquées à chaque redirection, taille et durée limitées.</li>
+    <li><strong>Exports :</strong> cellules protégées contre l’injection de formules ; liens de téléchargement à durée courte, liés au propriétaire.</li>
+    <li><strong>Maquettes partagées :</strong> HTML échappé, aucun script, politique de sécurité de contenu stricte, non indexées.</li>
+    <li><strong>Coûts :</strong> limites mensuelles par personne, confirmation des recherches coûteuses, rechargements Google limités par la même allocation.</li>
+    <li>Une revue de sécurité indépendante a été menée ; les 5 problèmes trouvés ont été corrigés et couverts par des tests.</li>
+  </ul>
+  <h3>À votre charge</h3>
+  <ul>
+    <li>Secrets forts et uniques dans <code>.env</code> ; accès SSH par clé (désactivez la connexion par mot de passe) ; mises à jour système régulières (<code>unattended-upgrades</code>).</li>
+    <li>Clé Google restreinte à Places API (New) et à l’IP du serveur ; alertes de budget actives.</li>
+    <li>Sauvegardes chiffrées et stockées hors du serveur ; test de restauration de temps en temps.</li>
+    <li>Respect des lois sur les données personnelles et la prospection (par ex. la loi togolaise de 2019 sur la protection des données à caractère personnel, le Data Protection Act 2012 du Ghana, le RGPD pour les contacts européens) : n’utilisez que les coordonnées professionnelles publiées, identifiez-vous clairement et respectez toute demande de ne plus être contacté.</li>
+  </ul>
+</section>
+
+<!-- 10 -->
+<section class="chapter">
+  <h2><span class="num">10</span>Dépannage</h2>
+  <table>
+    <thead><tr><th style="width:33%">Symptôme</th><th>Cause probable et solution</th></tr></thead>
+    <tbody>
+      <tr><td>Le site ne répond pas</td><td>DNS pas encore propagé ou ports fermés. Vérifiez <code>ping</code>, <code>ufw status</code> (80 et 443 ouverts) et <code>docker compose ps</code>.</td></tr>
+      <tr><td>Erreur de certificat HTTPS</td><td><code>DOMAIN</code> ne correspond pas au DNS, ou le DNS ne pointe pas encore vers le serveur. Voir <code>docker compose logs proxy</code> ; Caddy réessaie automatiquement.</td></tr>
+      <tr><td>« LeadFinder isn’t set up yet »</td><td>Création du premier compte sans le bon jeton. Utilisez <code>/sign-up?setup=&lt;SETUP_TOKEN&gt;</code>.</td></tr>
+      <tr><td>« Sign-up needs a valid invitation link »</td><td><code>SIGNUP_MODE=invite</code> : la personne doit ouvrir son lien d’invitation personnel, avec l’e-mail invité.</td></tr>
+      <tr><td>Recherche bloquée sur « Queued »</td><td>Le worker est arrêté : <code>docker compose logs worker</code> puis <code>docker compose up -d worker</code>.</td></tr>
+      <tr><td>« Google rejected the API key… »</td><td>Places API (New) non activée, facturation absente, ou restriction IP qui ne correspond pas à l’IP du serveur.</td></tr>
+      <tr><td>Bandeau « Sample data mode »</td><td><code>GOOGLE_MAPS_API_KEY</code> vide ou mal lue. Vérifiez <code>.env</code> puis <code>docker compose up -d</code>.</td></tr>
+      <tr><td>Noms manquants dans une collection</td><td>Les données Google y sont rechargées en direct : clé absente, limite mensuelle atteinte (un message l’indique), ou panne Google.</td></tr>
+      <tr><td>« Too many attempts » / « Too many sign-in attempts »</td><td>Limite anti-abus réellement atteinte : patientez une minute (par adresse IP) ou 15 minutes (par compte).</td></tr>
+      <tr><td>Connexion : « …a problem on the server (often the database can’t be reached) »</td><td>La base de données ne répond pas. Vérifiez <code>DATABASE_URL</code> (voir ci-dessous) et les journaux de l’application.</td></tr>
+      <tr><td>Worker ou migrations : <code>getaddrinfo ENOTFOUND db.&lt;ref&gt;.supabase.co</code></td><td>Hôte direct Supabase (IPv6 uniquement) ou projet en pause. Utilisez la chaîne « Session pooler » + <code>?uselibpqcompat=true&amp;sslmode=require</code> (chapitre 8), puis <code>pnpm db:migrate</code> et redémarrez.</td></tr>
+      <tr><td><code>password authentication failed</code> / <code>Tenant or user not found</code></td><td>Mot de passe erroné ou non encodé, ou utilisateur <code>postgres</code> au lieu de <code>postgres.&lt;ref&gt;</code> avec le pooler.</td></tr>
+      <tr><td><code>self-signed certificate in certificate chain</code></td><td>Ajoutez <code>uselibpqcompat=true</code> devant <code>sslmode=require</code> dans <code>DATABASE_URL</code>.</td></tr>
+      <tr><td><code>too many clients</code> / <code>max client connections reached</code></td><td>Baissez <code>DB_POOL_MAX</code> et <code>QUEUE_POOL_MAX</code>, ou augmentez la taille du pooler dans Supabase.</td></tr>
+      <tr><td>Export qui ne se télécharge pas</td><td>Le lien a expiré (15 min) : rouvrez l’export. Pour les gros exports, vérifiez que le worker tourne et que le volume <code>exports</code> est partagé.</td></tr>
+      <tr><td>« Something went wrong » + référence</td><td>Cherchez la référence dans <code>docker compose logs web</code>. Après une mise à jour, vérifiez que <code>migrate</code> s’est terminé avec le code 0.</td></tr>
+      <tr><td>Disque plein</td><td><code>docker system prune</code> (anciennes images), purge des anciennes sauvegardes, agrandissement du disque.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 11 -->
+<section class="chapter">
+  <h2><span class="num">11</span>Développement et tests</h2>
+  <p class="intro">Pour faire évoluer l’application sur un poste de développement (Node.js 22, pnpm 10, PostgreSQL 16).</p>
+<pre>pnpm install
+cp .env.example .env.local     <span class="c"># puis renseignez BETTER_AUTH_SECRET</span>
+pnpm db:migrate
+pnpm dev                        <span class="c"># application sur http://localhost:3000</span>
+pnpm worker                     <span class="c"># dans un second terminal</span></pre>
+  <table>
+    <thead><tr><th style="width:34%">Commande</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>pnpm typecheck</code></td><td>Vérification des types TypeScript.</td></tr>
+      <tr><td><code>pnpm lint</code></td><td>Analyse statique (ESLint).</td></tr>
+      <tr><td><code>pnpm test</code></td><td>≈ 1 100 tests unitaires et d’intégration sur une base de test recréée à chaque lancement.</td></tr>
+      <tr><td><code>pnpm build &amp;&amp; pnpm test:e2e</code></td><td>Parcours complet dans un navigateur (inscription → recherche → collection → proposition → export).</td></tr>
+      <tr><td><code>pnpm db:generate</code></td><td>Génère une migration après modification de <code>src/server/db/schema.ts</code>.</td></tr>
+    </tbody>
+  </table>
+  <p>Les règles de contribution (sécurité, règle de conservation Google, conventions d’interface) sont dans <code>CLAUDE.md</code> et <code>docs/ARCHITECTURE.md</code>.</p>
+</section>
+
+<!-- 12 -->
+<section class="chapter">
+  <h2><span class="num">12</span>Limites connues et aide-mémoire</h2>
+  <h3>Limites connues</h3>
+  <ul>
+    <li>Les appels réels à Google Places et à l’AI Gateway n’ont pas pu être testés dans l’environnement de développement (pas de clés ni d’accès réseau à ces services) : ils sont couverts par des tests avec des réponses enregistrées. Commencez par de petites recherches.</li>
+    <li>L’image Docker n’a pas été construite dans l’environnement de développement (voir chapitre 2).</li>
+    <li>Google renvoie au plus ~60 résultats par requête : les grands volumes reposent sur le découpage de la carte, et le nombre final dépend des entreprises réellement présentes dans la zone.</li>
+    <li>Dans les collections, le tri et le filtre sur les champs Google (nom, téléphone…) ne fonctionnent que pour les sources autorisant le stockage.</li>
+    <li>Pas d’envoi d’e-mails par l’application (invitations, réinitialisation de mot de passe, propositions) : vous envoyez vous-même depuis votre messagerie ou WhatsApp.</li>
+    <li>L’interface est en anglais ; les propositions et maquettes sont disponibles en anglais et en français.</li>
+  </ul>
+
+  <h3>Aide-mémoire</h3>
+  <table>
+    <thead><tr><th style="width:42%">Action</th><th>Commande</th></tr></thead>
+    <tbody>
+      <tr><td>Démarrer / mettre à jour</td><td><code>docker compose up -d --build</code></td></tr>
+      <tr><td>État des services</td><td><code>docker compose ps</code></td></tr>
+      <tr><td>Journaux</td><td><code>docker compose logs -f web worker</code></td></tr>
+      <tr><td>Redémarrer le worker</td><td><code>docker compose restart worker</code></td></tr>
+      <tr><td>Arrêter</td><td><code>docker compose down</code> (les données restent dans les volumes)</td></tr>
+      <tr><td>Sauvegarde</td><td><code>docker compose exec -T db pg_dump -U leadfinder leadfinder | gzip &gt; sauvegarde.sql.gz</code></td></tr>
+      <tr><td>Console SQL</td><td><code>docker compose exec db psql -U leadfinder</code></td></tr>
+      <tr><td>Nouveau mot de passe</td><td><code>docker compose exec web node_modules/.bin/tsx --tsconfig tsconfig.worker.json src/scripts/set-password.ts &lt;email&gt; '&lt;mot de passe&gt;'</code></td></tr>
+      <tr><td>Créer l’administrateur</td><td><code>https://votre-domaine/sign-up?setup=&lt;SETUP_TOKEN&gt;</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>

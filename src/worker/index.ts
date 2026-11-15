@@ -2,13 +2,14 @@
  * Background worker: `pnpm worker`. Processes search jobs, exports and periodic maintenance.
  * Run at least one instance alongside the web app.
  */
-import "dotenv/config";
+import "@/server/load-env";
 import { getBoss, QUEUES, stopBoss } from "@/server/queue";
 import { env } from "@/server/env";
 import { runSearchJob } from "@/server/search/runner";
 import { runExport } from "@/server/exports/runner";
 import { runMaintenance } from "@/server/search/maintenance";
 import { closeDb } from "@/server/db";
+import { explainDbConnectionError } from "@/server/db/connection-help";
 
 async function main() {
   const boss = await getBoss();
@@ -42,6 +43,8 @@ process.on("SIGINT", () => void shutdown("SIGINT"));
 process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
 main().catch((e) => {
-  console.error("[worker] failed to start", e);
+  const hint = explainDbConnectionError(e, process.env.DATABASE_URL);
+  if (hint) console.error(`[worker] failed to start: cannot connect to the database.\n  ${hint}`);
+  else console.error("[worker] failed to start", e);
   process.exit(1);
 });

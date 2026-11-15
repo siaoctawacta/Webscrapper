@@ -21,6 +21,12 @@ Built for web designers and agencies prospecting local businesses — English an
 | **Export** | XLSX (sheets: Business Data, Search Summary, Data Quality) or UTF-8 CSV. Selected rows, current page, or all filtered rows; your columns and sort order. Phone numbers keep their `+` and leading zeros; cells are protected against spreadsheet formula injection; download links expire after 15 minutes. |
 | **Access control** | Email + password sign-in. The first account becomes the admin (in production it needs the server's `SETUP_TOKEN`). Everyone else waits for approval, or joins through a personal invite link. Admins approve/disable people, set per-person limits, and see usage, estimated cost and an audit log. |
 
+## Documentation (français)
+
+- [Guide d’utilisation (PDF)](docs/LeadFinder-Guide-utilisateur.pdf) — search, results, collections, proposals, homepage concepts, export, admin.
+- [Documentation technique (PDF)](docs/LeadFinder-Documentation-technique.pdf) — step-by-step deployment on a VPS with Docker, Google/AI setup, configuration reference, operations, security, troubleshooting.
+- Sources in `docs/manuals/` (HTML + screenshots); rebuild with `node docs/manuals/build.cjs`.
+
 ## Data sources and what is stored (please read)
 
 The app follows Google Maps Platform terms by default:
@@ -72,6 +78,23 @@ pnpm worker
 ```
 
 Open http://localhost:3000 and sign up — the first account becomes the admin. (In production, set `SETUP_TOKEN` and create the first account at `/sign-up?setup=<SETUP_TOKEN>`.)
+
+`pnpm dev`, `pnpm worker`, `pnpm db:migrate` and `pnpm user:set-password` all read `.env.local` first, then `.env`.
+
+### Using Supabase (or another hosted Postgres)
+
+1. In Supabase, open **Connect** and copy the **Session pooler** connection string (`postgres.<ref>@aws-…pooler.supabase.com:5432`). Don't use the *Direct connection* host `db.<ref>.supabase.co`: it only answers over IPv6, and most home networks and many servers fail with `getaddrinfo ENOTFOUND`.
+2. Put your database password in place of `[YOUR-PASSWORD]` (URL-encode special characters: `@` → `%40`, `#` → `%23`, `/` → `%2F`) and add `?uselibpqcompat=true&sslmode=require` at the end:
+
+   ```
+   DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?uselibpqcompat=true&sslmode=require
+   DB_POOL_MAX=5
+   QUEUE_POOL_MAX=4
+   ```
+
+3. Run `pnpm db:migrate`, then restart `pnpm dev` and `pnpm worker`.
+
+If the database can't be reached, the worker and `pnpm db:migrate` print the likely cause and the fix (wrong host, paused project, wrong password, SSL setting…), and the sign-in page says the server has a problem instead of showing a misleading message.
 
 ### Turning on real data (Google Places API)
 
@@ -129,6 +152,8 @@ Tests use a separate Postgres database (`leadfinder_test`) that is recreated on 
 - [ ] `SETUP_TOKEN` set; create your admin account at `/sign-up?setup=<SETUP_TOKEN>` right after deploying.
 - [ ] `SIGNUP_MODE=invite` or `approval`. Invite people from Admin → Invitations and send them their personal link.
 - [ ] Run behind a reverse proxy that overwrites `X-Forwarded-For` (the bundled Caddy does), or set `CLIENT_IP_HEADER` to your platform's client-IP header.
+- [ ] Set a strong `POSTGRES_PASSWORD` before the first `docker compose up` (Docker only).
+- [ ] Password resets (no email sending): `pnpm user:set-password <email> '<new password>'` on the server.
 - [ ] Google key restricted by API and IP; billing alerts and quotas configured in Google Cloud.
 - [ ] HTTPS in front of the app (cookies are `Secure` automatically when `APP_URL` is https).
 - [ ] Log shipping and uptime monitoring for both processes.

@@ -27,4 +27,5 @@ COPY --chown=app:app drizzle ./drizzle
 RUN mkdir -p /app/storage/exports && chown -R app:app /app/storage
 USER app
 EXPOSE 3000
-CMD ["pnpm", "start"]
+# Run binaries directly: the unprivileged user can't let corepack download pnpm at runtime.
+CMD ["node_modules/.bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]

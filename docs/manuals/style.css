@@ -1,0 +1,169 @@
+/* Shared print stylesheet for the LeadFinder PDF manuals (rendered with Chromium via build.cjs). */
+@font-face { font-family: "Geist"; src: url("fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Geist Mono"; src: url("fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; }
+
+@page { size: A4; margin: 20mm 17mm 20mm 17mm; }
+@page :first { margin: 0; }
+
+:root {
+  --ink: #18181b;
+  --muted: #5f5f6b;
+  --faint: #8b8b96;
+  --line: #e4e4e7;
+  --soft: #f6f6f7;
+  --accent: #4f46e5;
+  --accent-soft: #eef0ff;
+  --warn: #9a6200;
+  --warn-soft: #fff7e6;
+  --danger: #b42318;
+  --danger-soft: #fef1f0;
+  --ok: #0f7a4d;
+  --ok-soft: #ecfaf3;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0;
+  font-family: "Geist", "Inter", system-ui, sans-serif;
+  font-size: 10pt;
+  line-height: 1.55;
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* ── Cover ── */
+.cover {
+  height: 297mm;
+  width: 210mm;
+  padding: 30mm 22mm 24mm;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  break-after: page;
+  position: relative;
+  overflow: hidden;
+}
+.cover::after {
+  content: "";
+  position: absolute;
+  right: -60mm;
+  top: 70mm;
+  width: 170mm;
+  height: 170mm;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #e0e3ff 0%, #f1f0ff 45%, rgba(250, 250, 250, 0) 70%);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13pt; letter-spacing: -0.01em; position: relative; z-index: 1; }
+.brand .mark { width: 30px; height: 30px; border-radius: 8px; background: var(--ink); display: grid; place-items: center; }
+.brand .mark svg { width: 15px; height: 15px; }
+.cover .kicker { margin-top: auto; font-size: 9.5pt; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); position: relative; z-index: 1; }
+.cover h1 { font-size: 34pt; line-height: 1.08; letter-spacing: -0.035em; font-weight: 650; margin: 8px 0 14px; max-width: 150mm; position: relative; z-index: 1; }
+.cover .lead { font-size: 13pt; color: var(--muted); max-width: 140mm; margin: 0; position: relative; z-index: 1; }
+.cover .meta { margin-top: 26mm; display: flex; gap: 14mm; font-size: 9pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6mm; position: relative; z-index: 1; }
+.cover .meta b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+
+/* ── Table of contents ── */
+.toc { break-after: page; }
+.toc h2 { margin-top: 0; }
+.toc ol { list-style: none; padding: 0; margin: 0; counter-reset: toc; }
+.toc li { counter-increment: toc; display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 10.5pt; }
+.toc li::before { content: counter(toc, decimal-leading-zero); color: var(--faint); font-variant-numeric: tabular-nums; width: 22px; }
+.toc li span { color: var(--muted); margin-left: auto; font-size: 9pt; }
+
+/* ── Headings & text ── */
+h2, h3, h4 { letter-spacing: -0.02em; line-height: 1.25; break-after: avoid; }
+section.chapter { break-before: page; }
+section.chapter:first-of-type { break-before: auto; }
+h2 { font-size: 20pt; font-weight: 650; margin: 0 0 4mm; }
+h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 8px; }
+.chapter > .intro { font-size: 11pt; color: var(--muted); margin: 0 0 7mm; max-width: 160mm; }
+h3 { font-size: 12.5pt; font-weight: 620; margin: 8mm 0 2.5mm; }
+h4 { font-size: 10.5pt; font-weight: 620; margin: 5mm 0 1.5mm; }
+p { margin: 0 0 2.6mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+li { margin: 0 0 1.2mm; }
+strong { font-weight: 620; }
+a { color: var(--accent); text-decoration: none; }
+.muted { color: var(--muted); }
+.small { font-size: 8.8pt; }
+
+code, kbd, pre { font-family: "Geist Mono", ui-monospace, monospace; }
+code { font-size: 8.7pt; background: var(--soft); border: 1px solid var(--line); border-radius: 4px; padding: 0.5px 4px; word-break: break-word; }
+pre {
+  font-size: 8.4pt;
+  line-height: 1.55;
+  background: #111114;
+  color: #ececf1;
+  border-radius: 8px;
+  padding: 3.6mm 4.2mm;
+  margin: 0 0 3.5mm;
+  white-space: pre-wrap;
+  word-break: break-word;
+  break-inside: avoid;
+}
+pre .c { color: #8b8b9a; }
+kbd { font-size: 8.4pt; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: #fff; }
+
+/* ── Steps ── */
+ol.steps { list-style: none; padding: 0; counter-reset: step; margin: 0 0 4mm; }
+ol.steps > li { counter-increment: step; position: relative; padding-left: 10mm; margin-bottom: 3.2mm; break-inside: avoid; }
+ol.steps > li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 0.2mm;
+  width: 6.2mm; height: 6.2mm; border-radius: 50%;
+  background: var(--ink); color: #fff;
+  font-size: 8.5pt; font-weight: 600;
+  display: grid; place-items: center;
+}
+
+/* ── Callouts ── */
+.callout { border-radius: 8px; padding: 3mm 4mm; margin: 0 0 4mm; border: 1px solid; break-inside: avoid; font-size: 9.4pt; }
+.callout > b:first-child { display: block; margin-bottom: 1mm; font-size: 9.6pt; }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+.note { background: var(--accent-soft); border-color: #d6d9ff; }
+.note > b:first-child { color: var(--accent); }
+.tip { background: var(--ok-soft); border-color: #c7eedb; }
+.tip > b:first-child { color: var(--ok); }
+.warn { background: var(--warn-soft); border-color: #f5dfae; }
+.warn > b:first-child { color: var(--warn); }
+.danger { background: var(--danger-soft); border-color: #f8cfca; }
+.danger > b:first-child { color: var(--danger); }
+
+/* ── Tables ── */
+table { width: 100%; border-collapse: collapse; margin: 0 0 4.5mm; font-size: 9pt; break-inside: auto; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 8.4pt; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1.5px solid var(--ink); padding: 2mm 2.5mm 1.6mm 0; }
+td { border-bottom: 1px solid var(--line); padding: 2mm 2.5mm 2mm 0; vertical-align: top; }
+td:first-child { font-weight: 550; }
+td code { font-size: 8.2pt; }
+
+/* ── Figures ── */
+figure { margin: 2mm 0 5mm; break-inside: avoid; }
+figure img { width: 90%; margin: 0 auto; display: block; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 6px 18px rgba(0,0,0,0.05); }
+figure.half img { width: 58%; margin: 0 auto; }
+figure.medium img { width: 74%; margin: 0 auto; }
+figure.phone img { width: 46mm; margin: 0 auto; border-radius: 14px; }
+figcaption { font-size: 8.6pt; color: var(--muted); margin-top: 2mm; text-align: center; }
+
+/* ── Layout helpers ── */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-bottom: 4mm; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 3.2mm 4mm; break-inside: avoid; }
+.card h4 { margin-top: 0; }
+.tag { display: inline-block; font-size: 8pt; font-weight: 550; border-radius: 999px; padding: 0 7px; background: var(--soft); border: 1px solid var(--line); margin-right: 3px; }
+.tag.accent { background: var(--accent-soft); border-color: #d6d9ff; color: var(--accent); }
+.tag.ok { background: var(--ok-soft); border-color: #c7eedb; color: var(--ok); }
+.tag.warn { background: var(--warn-soft); border-color: #f5dfae; color: var(--warn); }
+.keep { break-inside: avoid; }
+.pb { break-before: page; }
+
+/* Architecture diagram */
+.diagram { border: 1px solid var(--line); border-radius: 10px; padding: 5mm; background: #fcfcfd; margin: 0 0 5mm; break-inside: avoid; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
+/* Keep an introducing sentence with the command or figure that follows it. */
+p:has(+ pre), p:has(+ figure), p:has(+ table), p:has(+ ol.steps) { break-after: avoid; }
+h3 + p, h4 + p { break-before: avoid; }
+table.config td:first-child { width: 47%; }
+table.config td:first-child code { font-size: 7.6pt; white-space: nowrap; }

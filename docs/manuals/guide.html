@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>LeadFinder — Guide d’utilisation</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="brand"><span class="mark"><svg viewBox="0 0 24 24" fill="#fafafa"><path d="M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z"/></svg></span>LeadFinder</div>
+  <div class="kicker">Guide d’utilisation</div>
+  <h1>Trouver des entreprises, les organiser et leur proposer un site web</h1>
+  <p class="lead">De Google Maps à la proposition envoyée : rechercher, trier, enregistrer vos prospects, écrire des propositions, créer des maquettes de page d’accueil et exporter.</p>
+  <div class="meta">
+    <div><b>Version</b>1.0</div>
+    <div><b>Date</b>15 novembre 2026</div>
+    <div><b>Public</b>Utilisateurs et administrateurs</div>
+  </div>
+</section>
+
+<section class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li>Avant de commencer <span>vocabulaire de l’interface</span></li>
+    <li>Se connecter <span>compte, invitation, approbation</span></li>
+    <li>Lancer une recherche <span>lien Google Maps ou mot-clé</span></li>
+    <li>Lire et trier les résultats <span>onglets, tri, filtres, colonnes</span></li>
+    <li>La fiche d’une entreprise <span>contacts, présence en ligne</span></li>
+    <li>Enregistrer dans une collection <span>sélection, collections</span></li>
+    <li>Travailler ses prospects <span>statuts, tags, notes, actions groupées</span></li>
+    <li>Écrire une proposition <span>e-mail ou WhatsApp</span></li>
+    <li>Créer une maquette de page d’accueil <span>IA, aperçu, partage</span></li>
+    <li>Exporter vers Excel ou CSV <span>lignes, colonnes, règles</span></li>
+    <li>Vos paramètres <span>signature des propositions</span></li>
+    <li>Administration <span>utilisateurs, invitations, consommation</span></li>
+    <li>Bonnes pratiques et questions fréquentes</li>
+  </ol>
+</section>
+
+<!-- 1 -->
+<section class="chapter">
+  <h2><span class="num">01</span>Avant de commencer</h2>
+  <p class="intro">LeadFinder trouve des entreprises sur Google Maps (hôtels, restaurants, salons de coiffure…), repère celles qui n’ont pas de site web et vous aide à les démarcher. L’interface est en anglais ; les propositions et les maquettes sont disponibles en français et en anglais.</p>
+
+  <h3>Vocabulaire de l’interface</h3>
+  <table>
+    <thead><tr><th style="width:32%">À l’écran</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td>New search</td><td>Lancer une nouvelle recherche</td></tr>
+      <tr><td>Searches</td><td>Historique de vos recherches et de leurs résultats</td></tr>
+      <tr><td>Collections</td><td>Vos listes de prospects enregistrés</td></tr>
+      <tr><td>Homepage concepts</td><td>Maquettes de page d’accueil générées pour vos prospects</td></tr>
+      <tr><td>Settings</td><td>Vos paramètres (signature des propositions)</td></tr>
+      <tr><td>Admin</td><td>Administration (visible seulement par les administrateurs)</td></tr>
+      <tr><td>No website / Has website</td><td>Sans site web / Avec site web</td></tr>
+      <tr><td>Lead, Lead status</td><td>Prospect, statut du prospect</td></tr>
+      <tr><td>Proposal</td><td>Proposition commerciale (e-mail ou message WhatsApp)</td></tr>
+      <tr><td>Export</td><td>Télécharger en Excel (.xlsx) ou CSV</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn"><b>Bandeau jaune « Sample data mode »</b>
+    <p>Tant que l’administrateur n’a pas ajouté de clé Google, l’application fonctionne avec des <strong>données d’exemple</strong> : des entreprises fictives mais réalistes (sites en <code>.example</code>), pratiques pour découvrir l’outil. Ne les contactez pas : elles n’existent pas. Les captures d’écran de ce guide ont été réalisées dans ce mode.</p>
+  </div>
+
+  <h3>Les règles que suit LeadFinder</h3>
+  <ul>
+    <li><strong>Aucune donnée inventée.</strong> Une information absente reste vide.</li>
+    <li><strong>Les e-mails ne sont jamais devinés.</strong> Seules les adresses publiées sur le site de l’entreprise elle-même sont reprises, avec la page où elles ont été trouvées. Elles sont marquées « Source-provided » (fournie par la source), jamais « vérifiée ».</li>
+    <li><strong>Google, uniquement par son API officielle.</strong> Conformément aux conditions de Google, les résultats Google sont conservés 24 heures ; dans vos collections, seuls le lien Maps et vos propres informations sont gardés (le nom, le téléphone et l’adresse sont rechargés à l’affichage).</li>
+  </ul>
+</section>
+
+<!-- 2 -->
+<section class="chapter">
+  <h2><span class="num">02</span>Se connecter</h2>
+  <p class="intro">Chaque personne a son propre compte (e-mail et mot de passe). L’administrateur décide qui peut entrer.</p>
+
+  <figure class="half"><img src="img/01-connexion.jpg" alt="Page de connexion"><figcaption>La page de connexion (Sign in).</figcaption></figure>
+
+  <h3>Trois façons d’obtenir un compte</h3>
+  <div class="grid2">
+    <div class="card"><h4>Vous avez reçu un lien d’invitation</h4><p>Ouvrez-le : votre e-mail est déjà rempli. Choisissez votre nom et un mot de passe (10 caractères minimum). Votre compte est actif tout de suite.</p></div>
+    <div class="card"><h4>Inscription libre avec approbation</h4><p>Sur <strong>Create account</strong>, inscrivez-vous. Vous arrivez sur une page d’attente jusqu’à ce qu’un administrateur approuve votre compte. Cliquez alors sur <strong>Check again</strong>.</p></div>
+  </div>
+  <div class="callout note"><b>Premier administrateur</b>
+    <p>Lors de la mise en ligne, la personne qui installe l’application crée le compte administrateur avec un lien spécial (<code>/sign-up?setup=…</code>), décrit dans la documentation technique.</p>
+  </div>
+  <h3>Mot de passe oublié</h3>
+  <p>L’application n’envoie pas d’e-mails : demandez à votre administrateur de réinitialiser votre mot de passe. Pour vous déconnecter de tous vos appareils, utilisez <strong>Settings → Sign out of all devices</strong>.</p>
+</section>
+
+<!-- 3 -->
+<section class="chapter">
+  <h2><span class="num">03</span>Lancer une recherche</h2>
+  <p class="intro">La façon la plus simple : faire votre recherche sur Google Maps, puis copier le lien dans LeadFinder. L’application lit le mot recherché et la zone de la carte, puis interroge Google à travers son API officielle.</p>
+
+  <h3>Copier un lien Google Maps</h3>
+  <ol class="steps">
+    <li>Ouvrez <strong>Google Maps</strong> et tapez ce que vous cherchez, par exemple <em>hôtel</em> ou <em>salon de coiffure</em>.</li>
+    <li>Déplacez et zoomez la carte sur la zone qui vous intéresse (un quartier, une ville). <strong>La zone visible compte</strong> : c’est elle que LeadFinder parcourra.</li>
+    <li>Copiez l’adresse de la page dans la barre du navigateur. Sur téléphone, le bouton <em>Partager</em> donne un lien court (<code>maps.app.goo.gl/…</code>) qui fonctionne aussi.</li>
+  </ol>
+
+  <h3>Coller le lien dans LeadFinder</h3>
+  <ol class="steps">
+    <li>Menu <strong>New search</strong>, onglet <strong>Google Maps link</strong> : collez le lien.</li>
+    <li>LeadFinder affiche ce qu’il a compris : <em>Search for “hôtel” · Map area near 6.1434, 1.1658 · ≈49 × 30 km</em>. Si ce n’est pas ce que vous vouliez, refaites le lien sur Google Maps.</li>
+    <li>Choisissez <strong>combien d’entreprises</strong> : de 20 à 20 000.</li>
+    <li>Laissez activé <strong>Find emails and social links on their websites</strong> pour que LeadFinder visite le site de chaque entreprise et récupère les e-mails et réseaux sociaux publiés.</li>
+    <li>Vérifiez l’estimation en bas (nombre de requêtes Google et coût approximatif), puis cliquez sur <strong>Start search</strong>.</li>
+  </ol>
+  <figure><img src="img/02-recherche.jpg" alt="Formulaire de recherche avec un lien Google Maps"><figcaption>Le lien « hôtel » à Lomé est compris : terme recherché et zone de carte (≈ 49 × 30 km).</figcaption></figure>
+
+  <h3>Rechercher par mot-clé et lieu</h3>
+  <p>Onglet <strong>Keyword + place</strong> : indiquez <em>What</em> (par ex. <em>restaurant</em>) et <em>Where</em> (par ex. <em>Accra, Ghana</em>). Pratique quand vous n’avez pas de lien sous la main.</p>
+  <figure><img src="img/02b-recherche-motcle.jpg" alt="Recherche par mot-clé et lieu"><figcaption>Recherche « restaurant » à Accra, 5 000 résultats demandés.</figcaption></figure>
+
+  <h3>Le lien d’une seule entreprise</h3>
+  <p>Si vous collez le lien d’une fiche d’entreprise (Google Maps → une entreprise précise), LeadFinder récupère cette entreprise seule, avec ses coordonnées. Le bouton devient <strong>Get business details</strong>.</p>
+
+  <h3>Combien de résultats demander ?</h3>
+  <ul>
+    <li>Google renvoie au plus ~60 résultats par recherche. Pour aller au-delà, LeadFinder découpe automatiquement la carte en petites zones. Vous obtenez <strong>au plus</strong> le nombre demandé, et seulement autant d’entreprises qu’il en existe dans la zone.</li>
+    <li>Chaque requête est facturée par Google à votre organisation. Au-delà d’un certain coût, une fenêtre de confirmation s’affiche avant le lancement.</li>
+    <li>Votre administrateur peut limiter le nombre maximal de résultats et le volume mensuel par personne.</li>
+  </ul>
+
+  <h3>Suivre la progression</h3>
+  <p>Les grandes recherches tournent en arrière-plan : vous pouvez quitter la page et revenir plus tard (menu <strong>Searches</strong>). La barre indique le nombre d’entreprises trouvées, puis la vérification des sites web. Les résultats apparaissent au fur et à mesure. <strong>Stop</strong> arrête la recherche en gardant ce qui a déjà été trouvé.</p>
+  <figure><img src="img/03-progression.jpg" alt="Recherche en cours"><figcaption>Recherche en cours : 1 600 restaurants trouvés sur 5 000, zone de carte 69/249 parcourue.</figcaption></figure>
+</section>
+
+<!-- 4 -->
+<section class="chapter">
+  <h2><span class="num">04</span>Lire et trier les résultats</h2>
+  <p class="intro">Les résultats s’affichent dans un tableau. Trois onglets séparent les entreprises : <strong>All</strong> (toutes), <strong>No website</strong> (sans site web) et <strong>Has website</strong> (avec site web).</p>
+
+  <figure><img src="img/04-resultats.jpg" alt="Tableau des résultats"><figcaption>Résultats d’une recherche terminée : 500 hôtels, dont 176 sans site web.</figcaption></figure>
+
+  <div class="callout tip"><b>L’onglet « No website » : vos meilleurs prospects</b>
+    <p>Ces entreprises n’ont aucun site web référencé : ce sont les candidates idéales pour une proposition de site ou une maquette de page d’accueil gratuite.</p>
+  </div>
+  <figure><img src="img/05-sans-site.jpg" alt="Onglet sans site web"><figcaption>L’onglet « No website ». Remarquez les badges <em>Duplicate?</em> (doublon probable) et <em>Closed</em> (fermé définitivement).</figcaption></figure>
+
+  <h3>Trier</h3>
+  <ul>
+    <li><strong>Cliquez sur un titre de colonne</strong> pour trier de A à Z, cliquez encore pour Z à A, une troisième fois pour annuler.</li>
+    <li><strong>Maj (Shift) + clic</strong> sur une deuxième colonne pour un tri secondaire, par exemple <em>catégorie</em> puis <em>nom</em> (jusqu’à 3 colonnes). Sur téléphone, utilisez <strong>Add sort</strong>.</li>
+    <li>Les tris actifs apparaissent sous la barre d’outils (<em>Sorted by…</em>) ; la croix les retire.</li>
+  </ul>
+
+  <h3>Rechercher et filtrer</h3>
+  <p>La barre <strong>Search name, phone, email, address…</strong> cherche dans les noms, téléphones, e-mails, adresses et sites. Le bouton <strong>Filters</strong> ouvre les filtres :</p>
+  <ul>
+    <li><strong>Contact details</strong> : téléphone, e-mail, adresse — <em>Any</em> (peu importe), <em>Has</em> (présent), <em>Missing</em> (absent).</li>
+    <li><strong>Category</strong> : une ou plusieurs catégories, avec le nombre d’entreprises de chacune ; <em>Exclude selected</em> inverse le choix.</li>
+    <li><strong>City</strong>, <strong>Rating</strong> (note de 0 à 5), <strong>Reviews</strong> (nombre d’avis), qualité des données, état du site, statut de l’e-mail, masquer les doublons.</li>
+  </ul>
+  <figure><img src="img/06-filtres.jpg" alt="Panneau des filtres"><figcaption>Les filtres : coordonnées, catégories avec leurs effectifs, ville, note et avis.</figcaption></figure>
+  <p>Les filtres actifs s’affichent sous forme d’étiquettes que vous pouvez retirer une à une, ou toutes avec <strong>Clear all</strong>.</p>
+
+  <h3>Choisir les colonnes</h3>
+  <p>Le bouton <strong>Columns</strong> permet d’afficher, masquer et réordonner les colonnes (flèches haut/bas). Votre choix est mémorisé. <strong>Reset to default</strong> revient à la disposition d’origine.</p>
+  <figure><img src="img/07-colonnes.jpg" alt="Choix des colonnes"><figcaption>Le choix des colonnes.</figcaption></figure>
+
+  <h3>Pages et lignes</h3>
+  <p>En bas du tableau : nombre de lignes par page (25, 50 ou 100) et navigation entre les pages. Le tri et les filtres sont conservés d’une page à l’autre et dans l’adresse de la page : vous pouvez la mettre en favori ou la partager avec un collègue.</p>
+
+  <div class="callout warn"><b>Résultats Google : 24 heures</b>
+    <p>Avec de vraies données Google, les résultats d’une recherche sont supprimés automatiquement après 24 heures (conditions de Google). <strong>Enregistrez dans une collection</strong> les entreprises que vous voulez garder.</p>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="chapter">
+  <h2><span class="num">05</span>La fiche d’une entreprise</h2>
+  <p class="intro">Cliquez sur une ligne (ou appuyez sur Entrée) pour ouvrir sa fiche à droite.</p>
+  <figure class="medium"><img src="img/08-fiche-entreprise.jpg" alt="Fiche entreprise"><figcaption>Fiche d’une entreprise : contact, présence en ligne, localisation.</figcaption></figure>
+  <table>
+    <thead><tr><th style="width:26%">Rubrique</th><th>Ce que vous y trouvez</th></tr></thead>
+    <tbody>
+      <tr><td>Contact</td><td>Téléphone (bouton copier, <em>Call</em>, <em>WhatsApp</em>), e-mails avec la page du site où chacun a été trouvé (« Found on … »), site web.</td></tr>
+      <tr><td>Online presence</td><td>Site sécurisé (HTTPS) ou non, version mobile détectée ou non, année du © en bas de page (signalée si le site semble ancien), titre de la page, réseaux sociaux. De bons arguments pour une proposition de refonte.</td></tr>
+      <tr><td>Location</td><td>Adresse, ville, région, pays, coordonnées, lien Google Maps.</td></tr>
+      <tr><td>Data quality</td><td>Informations manquantes, doublon probable.</td></tr>
+      <tr><td>Provenance</td><td>D’où vient chaque donnée et quand elle a été récupérée.</td></tr>
+    </tbody>
+  </table>
+  <p>En haut de la fiche : <strong>Write proposal</strong>, <strong>Homepage concept</strong> (pour les entreprises sans site) et <strong>Save</strong>.</p>
+  <div class="callout note"><b>Badges</b>
+    <ul>
+      <li><span class="tag">Source-provided</span> : information fournie par la source (Google ou le site de l’entreprise), non vérifiée.</li>
+      <li><span class="tag accent">No website</span> : aucun site web référencé.</li>
+      <li><span class="tag warn">Duplicate?</span> : probablement la même entreprise qu’une autre ligne (même téléphone, même site ou nom très proche au même endroit).</li>
+      <li><span class="tag">Not stored</span> (dans une collection) : donnée Google qui ne peut pas être conservée ; elle est rechargée en direct quand c’est possible.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="chapter">
+  <h2><span class="num">06</span>Enregistrer dans une collection</h2>
+  <p class="intro">Une collection est une liste de prospects que vous gardez et suivez : par exemple « Hôtels de Lomé sans site web ».</p>
+  <h3>Sélectionner des entreprises</h3>
+  <ul>
+    <li>Cochez les lignes voulues. La case de l’en-tête sélectionne toute la page.</li>
+    <li>Après avoir coché la page entière, LeadFinder propose <strong>Select all N matching results</strong> pour sélectionner <em>tous</em> les résultats qui correspondent aux filtres (jusqu’à 20 000).</li>
+    <li>Maj + clic sur une case sélectionne toute une plage de lignes.</li>
+  </ul>
+  <figure><img src="img/09-selection.jpg" alt="Lignes sélectionnées"><figcaption>Quatre entreprises sélectionnées : la barre de sélection propose « Save to collection » et « Export ».</figcaption></figure>
+  <h3>Enregistrer</h3>
+  <p>Cliquez sur <strong>Save to collection</strong>, choisissez une collection existante ou <strong>New collection</strong>, donnez-lui un nom, puis <strong>Save</strong>. Les entreprises déjà présentes ne sont pas ajoutées deux fois.</p>
+  <figure class="half"><img src="img/10-enregistrer-collection.jpg" alt="Enregistrer dans une collection"><figcaption>Choix de la collection.</figcaption></figure>
+  <p>Pour une seule entreprise : menu <strong>⋮</strong> au bout de la ligne → <strong>Save to collection</strong>.</p>
+  <figure><img src="img/11-menu-ligne.jpg" alt="Menu d’une ligne"><figcaption>Le menu d’une ligne : détails, proposition, maquette, enregistrement, Google Maps.</figcaption></figure>
+</section>
+
+<!-- 7 -->
+<section class="chapter">
+  <h2><span class="num">07</span>Travailler ses prospects</h2>
+  <p class="intro">Le menu <strong>Collections</strong> affiche vos listes avec le nombre de prospects et leur répartition par statut. Ouvrez-en une pour la travailler.</p>
+  <figure><img src="img/13-collections.jpg" alt="Liste des collections"><figcaption>Vos collections. Le menu ⋮ permet de renommer ou supprimer.</figcaption></figure>
+
+  <figure><img src="img/14-collection.jpg" alt="Une collection"><figcaption>Une collection triée par statut : le statut et les tags se modifient directement dans le tableau.</figcaption></figure>
+
+  <h3>Les statuts</h3>
+  <table>
+    <thead><tr><th style="width:26%">Statut</th><th>Quand l’utiliser</th></tr></thead>
+    <tbody>
+      <tr><td>New</td><td>Prospect pas encore contacté.</td></tr>
+      <tr><td>Contacted</td><td>Premier contact fait (appel, message).</td></tr>
+      <tr><td>Proposal sent</td><td>Proposition envoyée — mis automatiquement quand vous marquez une proposition comme envoyée.</td></tr>
+      <tr><td>Replied</td><td>Le prospect a répondu.</td></tr>
+      <tr><td>Qualified</td><td>Intéressé, projet sérieux.</td></tr>
+      <tr><td>Won</td><td>Devenu client.</td></tr>
+      <tr><td>Not a fit</td><td>Pas intéressé ou pas adapté.</td></tr>
+    </tbody>
+  </table>
+  <p>Cliquez sur le statut d’une ligne pour le changer, et sur la colonne <strong>Tags</strong> pour ajouter ou retirer des étiquettes (« à rappeler », « Tokoin », « priorité »…).</p>
+
+  <h3>Notes et fiche du prospect</h3>
+  <p>Menu ⋮ → <strong>View &amp; edit</strong> : en plus de la fiche entreprise, la rubrique <em>Your lead</em> permet de modifier statut, tags et <strong>notes</strong> (nom du gérant, date de rappel, besoins…). Cliquez sur <strong>Save notes</strong>.</p>
+  <figure><img src="img/15-fiche-prospect.jpg" alt="Fiche prospect avec notes"><figcaption>La fiche d’un prospect avec sa note.</figcaption></figure>
+
+  <h3>Actions groupées</h3>
+  <p>Sélectionnez plusieurs prospects (ou tous ceux qui correspondent aux filtres), puis dans la barre de sélection :</p>
+  <ul>
+    <li><strong>Status</strong> : même statut pour tous.</li>
+    <li><strong>Tags</strong> : ajouter, retirer ou remplacer des tags.</li>
+    <li><strong>Copy / move</strong> : copier ou déplacer vers une autre collection (statut, tags et notes suivent).</li>
+    <li><strong>Remove</strong> : retirer de la collection (après confirmation).</li>
+  </ul>
+  <figure class="half"><img src="img/16-actions-groupees.jpg" alt="Ajout de tags en masse"><figcaption>Ajouter le tag « relance » à trois prospects d’un coup.</figcaption></figure>
+
+  <div class="callout note"><b>Prospects issus de Google</b>
+    <p>Pour respecter les conditions de Google, le nom, le téléphone et l’adresse ne sont pas stockés : ils sont rechargés en direct à l’ouverture de la collection. Si votre limite mensuelle de requêtes est atteinte, un message l’indique et ces champs restent vides jusqu’au mois suivant ; vos statuts, tags, notes et les e-mails trouvés sur les sites restent visibles.</p>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="chapter">
+  <h2><span class="num">08</span>Écrire une proposition</h2>
+  <p class="intro">Depuis une ligne (menu ⋮ → <strong>Write proposal</strong>) ou une fiche, LeadFinder rédige un message personnalisé que vous pouvez modifier puis envoyer par e-mail ou WhatsApp.</p>
+  <figure class="medium"><img src="img/12-proposition.jpg" alt="Fenêtre de proposition"><figcaption>Une proposition « New website » en français, avec les faits utilisés.</figcaption></figure>
+  <ol class="steps">
+    <li><strong>Topic</strong> (sujet) : <em>New website</em> (création de site, proposé par défaut si l’entreprise n’en a pas), <em>Website redesign</em> (refonte), <em>Local Google ranking</em> (visibilité locale sur Google), <em>Social media</em>, <em>Branding</em> ou <em>My own service</em> (votre propre offre, à décrire).</li>
+    <li><strong>Language</strong> : EN ou FR.</li>
+    <li><strong>Polish with AI</strong> (si l’IA est configurée) : rend le texte plus naturel sans ajouter d’informations. Sinon, un modèle de texte soigné est utilisé.</li>
+    <li>Relisez et modifiez l’<strong>objet</strong> et le <strong>message</strong>. La liste <em>Facts used</em> montre les seules informations sur l’entreprise utilisées : rien n’est inventé.</li>
+    <li>Envoyez : <strong>Copy</strong> (copier), <strong>Open in email</strong> (ouvre votre messagerie avec le message prêt — disponible si un e-mail a été trouvé) ou <strong>WhatsApp</strong> (ouvre WhatsApp avec le message — si le téléphone est valide).</li>
+    <li>Cliquez sur <strong>Mark as sent</strong> et indiquez comment vous l’avez envoyé. Pour un prospect de collection, le statut passe à <em>Proposal sent</em>.</li>
+  </ol>
+  <div class="callout tip"><b>Avant d’envoyer</b>
+    <p>Complétez vos paramètres : votre nom, votre agence, votre téléphone et votre site forment la signature (chapitre 11). Si vous avez partagé une maquette pour cette entreprise, son lien est ajouté automatiquement. Les e-mails trouvés sur les sites ne sont pas vérifiés : relisez et personnalisez toujours le message.</p>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="chapter">
+  <h2><span class="num">09</span>Créer une maquette de page d’accueil</h2>
+  <p class="intro">Pour une entreprise sans site, montrez-lui à quoi pourrait ressembler son site : LeadFinder génère une page d’accueil complète (textes, sections, couleurs) que vous pouvez lui envoyer par lien.</p>
+  <h3>Créer la maquette</h3>
+  <ol class="steps">
+    <li>Sur une entreprise sans site : menu ⋮ → <strong>Draft a homepage concept</strong> (ou bouton <strong>Homepage concept</strong> dans la fiche).</li>
+    <li>Vérifiez les coordonnées pré-remplies (nom, téléphone, WhatsApp, adresse) : ce sont celles qui figureront sur la maquette.</li>
+    <li>Listez les <strong>services</strong> (un par ligne), choisissez le <strong>style</strong> (moderne, minimal, élégant, audacieux, ludique, naturel), le <strong>ton</strong>, la couleur principale (ou automatique), la langue et les sections à inclure.</li>
+    <li>Cliquez sur <strong>Generate</strong>. Avec l’IA, les textes sont rédigés sur mesure ; sinon un modèle de qualité est utilisé.</li>
+  </ol>
+  <figure><img src="img/20-nouvelle-maquette.jpg" alt="Formulaire de nouvelle maquette"><figcaption>Le formulaire de création, pré-rempli à partir de l’entreprise.</figcaption></figure>
+
+  <h3>Modifier, prévisualiser, partager</h3>
+  <figure><img src="img/19-editeur-maquette.jpg" alt="Éditeur de maquette"><figcaption>L’éditeur : réglages à gauche, aperçu à droite (Desktop / Mobile).</figcaption></figure>
+  <ul>
+    <li><strong>Desktop / Mobile</strong> : aperçu sur ordinateur ou téléphone.</li>
+    <li><strong>Headline and tagline</strong> : retouchez l’accroche, le titre et le sous-titre, puis <strong>Save copy</strong>.</li>
+    <li><strong>Business and style</strong> : changez les services ou le style puis régénérez.</li>
+    <li><strong>Share link</strong> : activez le partage pour obtenir un lien privé à envoyer au prospect (non référencé par les moteurs de recherche, désactivable à tout moment).</li>
+    <li><strong>Download HTML</strong> : télécharge la page pour la reprendre dans votre outil de création de site.</li>
+  </ul>
+  <figure><img src="img/25-maquette-partagee.jpg" alt="Maquette partagée"><figcaption>Ce que voit le prospect en ouvrant le lien partagé.</figcaption></figure>
+  <p>Toutes vos maquettes sont listées dans le menu <strong>Homepage concepts</strong>.</p>
+  <div class="callout note"><b>Honnêteté du contenu</b>
+    <p>Les maquettes ne contiennent ni faux chiffres, ni faux avis clients : les zones d’avis et de photos sont clairement indiquées comme emplacements à compléter.</p>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="chapter">
+  <h2><span class="num">10</span>Exporter vers Excel ou CSV</h2>
+  <p class="intro">Depuis une recherche ou une collection, le bouton <strong>Export</strong> télécharge vos données dans l’ordre de tri affiché.</p>
+  <figure class="half"><img src="img/17-export.jpg" alt="Fenêtre d’export"><figcaption>Choix des lignes, du format et des colonnes.</figcaption></figure>
+  <ol class="steps">
+    <li><strong>Rows</strong> : les lignes sélectionnées, la page affichée, ou toutes les lignes filtrées (jusqu’à 20 000).</li>
+    <li><strong>Format</strong> : Excel (.xlsx) avec trois feuilles — <em>Business Data</em> (les données, avec filtres et en-tête figé), <em>Search Summary</em> (la recherche, les filtres, la date) et <em>Data Quality</em> (champs manquants, doublons, exclusions) — ou CSV (UTF-8, accents préservés).</li>
+    <li><strong>Columns</strong> : les colonnes visibles, toutes, ou votre choix. Dans une collection, l’option <em>Include lead status, tags and notes</em> ajoute votre suivi.</li>
+    <li>Cliquez sur <strong>Export</strong>. Les petits exports se téléchargent tout de suite ; les gros sont préparés en arrière-plan.</li>
+  </ol>
+  <ul>
+    <li>Les numéros de téléphone gardent leur « + » et les zéros initiaux.</li>
+    <li>Le lien de téléchargement expire au bout de 15 minutes ; rouvrez l’export si besoin.</li>
+    <li>Pour les lignes issues de Google, les conditions de Google ne permettent pas d’exporter le nom, le téléphone, l’adresse ou la note : ces cellules restent vides et la feuille <em>Data Quality</em> l’explique. Le lien Google Maps, les e-mails trouvés sur les sites et vos statuts, tags et notes sont exportés.</li>
+  </ul>
+</section>
+
+<!-- 11 -->
+<section class="chapter">
+  <h2><span class="num">11</span>Vos paramètres</h2>
+  <p class="intro">Menu <strong>Settings</strong> : les informations qui signent vos propositions et votre langue par défaut.</p>
+  <figure><img src="img/21-parametres.jpg" alt="Paramètres"><figcaption>Vos coordonnées pour les propositions, avec l’aperçu de la signature.</figcaption></figure>
+  <ul>
+    <li>Nom, agence, e-mail, téléphone, site, portfolio et signature personnalisée (sinon composée automatiquement).</li>
+    <li><strong>Default proposal language</strong> : English ou Français.</li>
+    <li><strong>Sign out of all devices</strong> : déconnecte vos autres sessions (ordinateur oublié, téléphone perdu…).</li>
+  </ul>
+  <p>Le menu en bas à gauche (votre nom) permet aussi de choisir le thème clair, sombre ou automatique et de vous déconnecter.</p>
+</section>
+
+<!-- 12 -->
+<section class="chapter">
+  <h2><span class="num">12</span>Administration</h2>
+  <p class="intro">Réservé aux administrateurs : menu <strong>Admin</strong>.</p>
+  <h3>Users — les utilisateurs</h3>
+  <figure><img src="img/22-admin-utilisateurs.jpg" alt="Liste des utilisateurs"><figcaption>Les utilisateurs, leur rôle, leur statut et leurs requêtes du mois.</figcaption></figure>
+  <ul>
+    <li><strong>Approve</strong> : approuver une inscription en attente (Pending).</li>
+    <li><strong>Disable / Enable</strong> : désactiver ou réactiver un compte. Une personne désactivée est déconnectée partout et ses recherches en cours sont arrêtées.</li>
+    <li><strong>Make admin / Make member</strong> : changer le rôle. Vous ne pouvez pas modifier votre propre compte ni retirer le dernier administrateur.</li>
+    <li><strong>Set limits</strong> : nombre maximal de résultats par recherche et de requêtes Google par mois pour cette personne.</li>
+  </ul>
+  <h3>Invitations</h3>
+  <p>Saisissez l’e-mail et le rôle, cliquez sur <strong>Create invitation</strong>, puis <strong>copiez le lien d’invitation personnel</strong> et envoyez-le à la personne (e-mail, WhatsApp…). Ce lien n’est affiché qu’une fois ; s’il est perdu, révoquez l’invitation et créez-en une nouvelle.</p>
+  <figure><img src="img/23-admin-invitation.jpg" alt="Création d’une invitation"><figcaption>Une invitation créée : le lien personnel est prêt à être copié.</figcaption></figure>
+  <h3>Usage et Audit log</h3>
+  <p><strong>Usage</strong> montre les requêtes Google facturables et le coût estimé par personne et par mois (la facture réelle est celle de Google Cloud). <strong>Audit log</strong> trace les actions importantes : recherches, enregistrements, exports, téléchargements, changements d’administration.</p>
+  <figure><img src="img/24-admin-consommation.jpg" alt="Consommation"><figcaption>La consommation par utilisateur et par mois.</figcaption></figure>
+</section>
+
+<!-- 13 -->
+<section class="chapter">
+  <h2><span class="num">13</span>Bonnes pratiques et questions fréquentes</h2>
+  <div class="grid2">
+    <div>
+      <h3 style="margin-top:0">Sur téléphone</h3>
+      <p>LeadFinder fonctionne dans le navigateur du téléphone : menu ☰ en haut à gauche, tableaux défilant horizontalement, fiches en plein écran. Pratique pour appeler ou écrire sur WhatsApp directement depuis la fiche.</p>
+      <h3>Prospecter de façon responsable</h3>
+      <ul>
+        <li>N’utilisez que les coordonnées professionnelles publiées par l’entreprise.</li>
+        <li>Présentez-vous clairement et respectez immédiatement toute demande de ne plus être contacté (passez le prospect en <em>Not a fit</em>).</li>
+        <li>Respectez les lois sur les données personnelles de votre pays et de celui du prospect.</li>
+        <li>Envoyez des messages personnalisés plutôt que des envois en masse.</li>
+      </ul>
+    </div>
+    <figure class="phone"><img src="img/26-mobile.jpg" alt="LeadFinder sur téléphone"><figcaption>LeadFinder sur téléphone.</figcaption></figure>
+  </div>
+
+  <h3>Questions fréquentes</h3>
+  <table>
+    <thead><tr><th style="width:36%">Question</th><th>Réponse</th></tr></thead>
+    <tbody>
+      <tr><td>Pourquoi moins de résultats que demandé ?</td><td>La zone ne contient pas plus d’entreprises de ce type, ou la recherche a atteint sa limite de requêtes. Élargissez la zone sur Google Maps ou changez de mot-clé.</td></tr>
+      <tr><td>Pourquoi pas d’e-mail pour la plupart des entreprises ?</td><td>Beaucoup de petites entreprises ne publient pas d’e-mail sur leur site, ou n’ont pas de site. LeadFinder n’invente jamais d’adresse : utilisez le téléphone ou WhatsApp.</td></tr>
+      <tr><td>« This link shows a map but no search »</td><td>Le lien montre une carte sans recherche : tapez un mot-clé sur Google Maps avant de copier le lien, ou indiquez-le dans le champ proposé.</td></tr>
+      <tr><td>Ma recherche reste sur « Queued »</td><td>Le service d’arrière-plan ne tourne pas : prévenez votre administrateur.</td></tr>
+      <tr><td>Mes résultats ont disparu</td><td>Les résultats Google sont supprimés après 24 heures. Les prospects enregistrés dans une collection restent.</td></tr>
+      <tr><td>« Not stored » dans une collection</td><td>Donnée Google non conservable, rechargée en direct si la clé Google fonctionne et que votre limite mensuelle n’est pas atteinte.</td></tr>
+      <tr><td>Le bouton « Open in email » est grisé</td><td>Aucun e-mail n’a été trouvé sur le site de l’entreprise. Copiez le message pour l’envoyer autrement.</td></tr>
+      <tr><td>Le lien de téléchargement ne marche plus</td><td>Il expire après 15 minutes : rouvrez l’export depuis la même page.</td></tr>
+      <tr><td>« Too many requests »</td><td>Trop d’actions en peu de temps : patientez une minute.</td></tr>
+      <tr><td>Connexion : « Too many sign-in attempts for this account »</td><td>Plus de 10 tentatives en 15 minutes sur ce compte : patientez 15 minutes, ou demandez à l’administrateur de réinitialiser votre mot de passe.</td></tr>
+      <tr><td>Connexion : « …a problem on the server… »</td><td>Le serveur ne joint pas sa base de données. Ce n’est pas votre mot de passe : prévenez l’administrateur.</td></tr>
+      <tr><td>Une donnée semble fausse</td><td>Les informations viennent de Google ou du site de l’entreprise et peuvent être anciennes. Vérifiez sur Google Maps (lien dans la fiche) et notez la correction dans les notes du prospect.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>

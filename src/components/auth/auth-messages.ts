@@ -6,10 +6,18 @@ export type AuthClientError = { code?: string; message?: string; status?: number
 
 export const MIN_PASSWORD_LENGTH = 10;
 
+const SERVER_PROBLEM =
+  "LeadFinder couldn't complete this because of a problem on the server (often the database can't be reached). Try again in a moment; if it keeps happening, the administrator should check the server logs.";
+
+/** Server's own 429 message when it says how long to wait, else a generic one. */
+const tooManyMessage = (err: NonNullable<AuthClientError>) =>
+  err.message && /minute|wait|try again/i.test(err.message) ? err.message : "Too many attempts. Wait a minute, then try again.";
+
 /** Plain-language message for a failed sign-in. */
 export function signInErrorMessage(err: AuthClientError): string {
   if (!err) return "Sign-in failed. Please try again.";
-  if (err.status === 429) return "Too many attempts. Wait a minute, then try again.";
+  if (err.status === 429) return tooManyMessage(err);
+  if (err.status !== undefined && err.status >= 500) return SERVER_PROBLEM;
   if (err.code === "INVALID_EMAIL_OR_PASSWORD" || err.status === 401) {
     return "That email and password don't match. Check them and try again.";
   }
@@ -20,7 +28,8 @@ export function signInErrorMessage(err: AuthClientError): string {
 /** Plain-language message for a failed sign-up. Server messages (invitation only / closed) are shown as-is. */
 export function signUpErrorMessage(err: AuthClientError): string {
   if (!err) return "We couldn't create your account. Please try again.";
-  if (err.status === 429) return "Too many attempts. Wait a minute, then try again.";
+  if (err.status === 429) return tooManyMessage(err);
+  if (err.status !== undefined && err.status >= 500) return SERVER_PROBLEM;
   if (err.code?.startsWith("USER_ALREADY_EXISTS")) return "An account with this email already exists. Sign in instead.";
   if (err.code === "PASSWORD_TOO_SHORT") return `Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`;
   if (err.code === "PASSWORD_TOO_LONG") return "That password is too long (128 characters at most).";

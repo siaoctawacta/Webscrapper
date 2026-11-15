@@ -18,7 +18,8 @@
     "test:e2e": "playwright test --trace off",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/server/db/migrate.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "user:set-password": "tsx --tsconfig tsconfig.worker.json src/scripts/set-password.ts"
   },
   "dependencies": {
     "@ai-sdk/gateway": "4.0.132",
