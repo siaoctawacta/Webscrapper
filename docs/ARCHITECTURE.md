@@ -341,3 +341,12 @@ Differences from the plan above, and details worth knowing:
   (Playwright against `next start` + worker in sample mode; run `pnpm build` first). Headless
   Chromium reports every download as "download", so the e2e checks the file name from the
   `Content-Disposition` header instead.
+- **Account security** (after an independent security review): there is no email verification, so
+  no email address grants anything by itself. The first admin account needs `SETUP_TOKEN` in
+  production (`/sign-up?setup=…`); invitations carry a secret single-use link token (stored hashed,
+  sent as the `x-invite-token` header by the sign-up form) that must match the invited email;
+  sign-in attempts are limited per account (10 / 15 min) as well as per IP. Client IPs come from
+  `CLIENT_IP_HEADER` (default X-Forwarded-For, right-most untrusted hop) — run behind a proxy that
+  overwrites it (Caddy in docker-compose). Search creation re-checks quotas under a per-user
+  advisory lock and counts queued/running estimates; disabling an account cancels its searches.
+  Live Google lookups in collections stop at the user's monthly request limit.

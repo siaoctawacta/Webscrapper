@@ -37,6 +37,7 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
   const [role, setRole] = React.useState<UserRole>("member");
   const [error, setError] = React.useState<string | null>(null);
   const [revoking, setRevoking] = React.useState<InvitationDto | null>(null);
+  const [lastInvite, setLastInvite] = React.useState<{ email: string; url: string } | null>(null);
   const emailId = React.useId();
   const roleId = React.useId();
 
@@ -47,7 +48,8 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
       qc.setQueryData<InvitationsResponse>(ADMIN_INVITATIONS_KEY, (old) =>
         old ? { ...old, invitations: [inv, ...old.invitations.filter((i) => i.id !== inv.id)] } : old,
       );
-      toast.success(`Invitation created for ${inv.email}. Share the sign-up link with them.`);
+      if (inv.inviteUrl) setLastInvite({ email: inv.email, url: inv.inviteUrl });
+      toast.success(`Invitation created for ${inv.email}. Copy their personal link and send it to them.`);
       setEmail("");
       setRole("member");
       setError(null);
@@ -80,9 +82,9 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
     create.mutate({ email: v, role });
   }
 
-  async function copyLink() {
+  async function copyLink(url = signUpUrl) {
     try {
-      await navigator.clipboard.writeText(signUpUrl);
+      await navigator.clipboard.writeText(url);
       toast.success("Sign-up link copied.");
     } catch {
       toast.error("Couldn't copy. Select the link and copy it manually.");
@@ -94,7 +96,7 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
   return (
     <div className="grid gap-5">
       <Notice tone="info" icon={<Info />}>
-        <p>Invited people can sign up even when sign-up is closed and are approved automatically.</p>
+        <p>Each invitation has a personal link. Whoever opens it and signs up with the invited email is approved automatically, even when sign-up is closed. The email address alone is not enough.</p>
         <p className="mt-1 opacity-90">
           <span className="font-medium">Current sign-up mode:</span> {MODE_TEXT[data.signupMode]}
         </p>
@@ -103,7 +105,7 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
       <Card>
         <CardHeader>
           <CardTitle>Invite someone</CardTitle>
-          <CardDescription>LeadFinder doesn&apos;t send emails. After creating the invitation, send them the sign-up link yourself.</CardDescription>
+          <CardDescription>LeadFinder doesn&apos;t send emails. After creating the invitation, send the person their personal invite link yourself.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-start">
@@ -136,13 +138,27 @@ export function InvitationsPanel({ initialData, signUpUrl }: { initialData: Invi
               Create invitation
             </Button>
           </form>
-          <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-subtle px-3 py-2.5 sm:flex-row sm:items-center">
-            <span className="shrink-0 text-xs text-muted-foreground">Sign-up link</span>
-            <code className="min-w-0 flex-1 truncate font-mono text-xs">{signUpUrl}</code>
-            <Button type="button" variant="outline" size="xs" onClick={copyLink} className="self-start sm:self-auto">
-              <Copy aria-hidden /> Copy link
-            </Button>
-          </div>
+          {lastInvite ? (
+            <div className="grid gap-2 rounded-lg border border-accent/25 bg-accent-soft px-3 py-2.5">
+              <p className="text-xs text-accent-soft-foreground">
+                Personal invite link for <span className="font-medium">{lastInvite.email}</span>. Copy it now — for security it is shown only once. If it gets lost, revoke the invitation and create a new one.
+              </p>
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1 font-mono text-xs">{lastInvite.url}</code>
+                <Button type="button" size="xs" onClick={() => copyLink(lastInvite.url)} className="self-start sm:self-auto">
+                  <Copy aria-hidden /> Copy invite link
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-subtle px-3 py-2.5 sm:flex-row sm:items-center">
+              <span className="shrink-0 text-xs text-muted-foreground">Public sign-up page</span>
+              <code className="min-w-0 flex-1 truncate font-mono text-xs">{signUpUrl}</code>
+              <Button type="button" variant="outline" size="xs" onClick={() => copyLink()} className="self-start sm:self-auto">
+                <Copy aria-hidden /> Copy link
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

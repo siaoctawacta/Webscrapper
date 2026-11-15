@@ -118,7 +118,12 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
         </div>
       </div>
 
-      {hasRestricted && (
+      {leads.data?.liveDetailsLimited && (
+        <Notice tone="warning" icon={<TriangleAlert />}>
+          Your monthly Google request limit is reached, so some names, phones and addresses can’t be loaded live until next month. Your own notes, tags and statuses are unaffected. An admin can raise your limit.
+        </Notice>
+      )}
+      {hasRestricted && !leads.data?.liveDetailsLimited && (
         <Notice icon={<Info />}>
           {hasLive
             ? "Names, phones and addresses of Google Maps leads are loaded live for this page (Google doesn’t allow storing them). Your status, tags, notes and the emails found on websites are saved."

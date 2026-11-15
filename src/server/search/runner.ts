@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, count, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import { ACTIVE_JOB_STATUSES, type JobProgress, type JobStatus, type LatLng, type Rect } from "@/lib/domain";
 import { db } from "../db";
-import { jobEvents, searchJobs, searchResults, type SearchJob, type SearchResult } from "../db/schema";
+import { jobEvents, searchJobs, searchResults, user, type SearchJob, type SearchResult } from "../db/schema";
 import { enrichWebsite, type EnrichmentResult, type EnrichOptions } from "../enrichment";
 import { env } from "../env";
 import { HttpError } from "../errors";
@@ -64,9 +64,28 @@ export async function runSearchJob(jobId: string, deps: RunnerDeps = {}): Promis
   const [job] = await db()
     .update(searchJobs)
     .set({ status: "searching", startedAt, progress: sql`${searchJobs.progress} || ${JSON.stringify({ phase: "planning" })}::jsonb` })
-    .where(and(eq(searchJobs.id, jobId), eq(searchJobs.status, "queued")))
+    .where(
+      and(
+        eq(searchJobs.id, jobId),
+        eq(searchJobs.status, "queued"),
+        // Only for accounts that are still active (disabled accounts must not keep spending).
+        sql`exists (select 1 from ${user} where ${user.id} = ${searchJobs.userId} and ${user.status} = 'active')`,
+      ),
+    )
     .returning();
-  if (!job) return;
+  if (!job) {
+    await db()
+      .update(searchJobs)
+      .set({ status: "cancelled", stopReason: "Cancelled because the account is not active.", finishedAt: now() })
+      .where(
+        and(
+          eq(searchJobs.id, jobId),
+          eq(searchJobs.status, "queued"),
+          sql`not exists (select 1 from ${user} where ${user.id} = ${searchJobs.userId} and ${user.status} = 'active')`,
+        ),
+      );
+    return;
+  }
   await new SearchRun(job, deps, now).execute();
 }
 

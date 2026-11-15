@@ -122,18 +122,26 @@ export function visibleText($: CheerioAPI): string {
     .replace(/ *\n[\s]*/g, "\n");
 }
 
-/** Latest plausible year next to a "©" / "(c)" / "Copyright" marker, on the marker's line. */
+/** Upper bound on markers examined, so hostile pages full of "©" stay cheap. */
+const MAX_COPYRIGHT_MARKERS = 200;
+
+/**
+ * Latest plausible year next to a "©" / "(c)" / "Copyright" marker, on the marker's line.
+ * Linear in the text size: lines are split once and every marker looks at a fixed-size window.
+ */
 export function findCopyrightYear(text: string, currentYear = new Date().getFullYear()): number | null {
   let best: number | null = null;
-  for (const m of text.matchAll(/©|&copy;|\(c\)|copyright/gi)) {
-    const lineStart = text.lastIndexOf("\n", m.index) + 1;
-    const before = text.slice(Math.max(lineStart, m.index - 12), m.index);
-    const afterStart = m.index + m[0].length;
-    const lineEnd = text.indexOf("\n", afterStart);
-    const after = text.slice(afterStart, Math.min(lineEnd === -1 ? text.length : lineEnd, afterStart + 60));
-    for (const y of `${before} ${after}`.matchAll(/(?<!\d)(?:19|20)\d{2}(?!\d)/g)) {
-      const year = Number(y[0]);
-      if (year >= MIN_COPYRIGHT_YEAR && year <= currentYear && (best === null || year > best)) best = year;
+  let markers = 0;
+  for (const line of text.split("\n")) {
+    for (const m of line.matchAll(/©|&copy;|\(c\)|copyright/gi)) {
+      if (++markers > MAX_COPYRIGHT_MARKERS) return best;
+      const before = line.slice(Math.max(0, m.index - 12), m.index);
+      const afterStart = m.index + m[0].length;
+      const after = line.slice(afterStart, afterStart + 60);
+      for (const y of `${before} ${after}`.matchAll(/(?<!\d)(?:19|20)\d{2}(?!\d)/g)) {
+        const year = Number(y[0]);
+        if (year >= MIN_COPYRIGHT_YEAR && year <= currentYear && (best === null || year > best)) best = year;
+      }
     }
   }
   return best;

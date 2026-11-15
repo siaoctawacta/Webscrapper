@@ -7,6 +7,8 @@ import { addLeadsSchema, addToCollection, listLeads } from "@/server/collections
 export const GET = withUser<{ id: string }>(async (req, { params, user }) => {
   const id = uuidParam(params.id, "Collection");
   const query = parseListQuery(req.nextUrl.searchParams, "collection");
+  // Each page may trigger billed live Google lookups, so keep page loads at a human pace.
+  await rateLimit(`collections.leads:${user.id}`, 60, 60);
   return json(await listLeads(user, id, query));
 });
 

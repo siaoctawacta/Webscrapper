@@ -28,8 +28,15 @@ const resetAuth = () => {
   delete (globalThis as { __leadfinderAuth?: unknown }).__leadfinderAuth;
 };
 
-const signUp = (email: string) =>
-  getAuth().api.signUpEmail({ body: { email, password: "a-long-password-123", name: "New Person" }, asResponse: true });
+const signUp = (email: string, inviteToken?: string) =>
+  getAuth().api.signUpEmail({
+    body: { email, password: "a-long-password-123", name: "New Person" },
+    headers: new Headers(inviteToken ? { "x-invite-token": inviteToken } : {}),
+    asResponse: true,
+  });
+
+/** The secret token from a personal invite link. */
+const tokenOf = (inv: InvitationDto) => new URL(inv.inviteUrl!).searchParams.get("invite")!;
 
 async function auditRows(action: string) {
   return db().select().from(auditLogs).where(eq(auditLogs.action, action)).orderBy(auditLogs.id);
@@ -221,22 +228,34 @@ describe("invitations and sign-up modes", () => {
   });
 
   for (const mode of ["invite", "closed"] as const) {
-    it(`SIGNUP_MODE=${mode}: rejects uninvited people with a clear message and auto-approves invited ones`, async () => {
+    it(`SIGNUP_MODE=${mode}: only a personal invite link (token + matching email) gets in`, async () => {
       const admin = await createTestUser({ role: "admin" });
       const inv = await body<InvitationDto>(await invite(admin, { email: "kofi@studio.gh", role: "member" }));
+      expect(inv.inviteUrl).toMatch(/\/sign-up\?invite=[\w-]{40,}&email=kofi%40studio\.gh$/);
       const revoked = await body<InvitationDto>(await invite(admin, { email: "revoked@studio.gh" }));
       await revokeInvitationRoute(apiRequest(`/api/v1/admin/invitations/${revoked.id}`, { method: "DELETE", user: admin }), ctx({ id: revoked.id }));
+      // The token is stored only as a hash.
+      const [stored] = await db().select().from(invitations).where(eq(invitations.id, inv.id));
+      expect(stored!.tokenHash).toMatch(/^[0-9a-f]{64}$/);
+      expect(stored!.tokenHash).not.toContain(tokenOf(inv));
 
       process.env.SIGNUP_MODE = mode;
       resetAuth();
 
+      const expected = mode === "invite" ? "Sign-up needs a valid invitation link. Ask your administrator for one." : "Sign-up is closed.";
       const stranger = await signUp("stranger@example.com");
       expect(stranger.status).toBe(403);
-      const err = (await stranger.json()) as { message: string };
-      expect(err.message).toBe(mode === "invite" ? "Sign-up is by invitation only." : "Sign-up is closed.");
-      expect((await signUp("revoked@studio.gh")).status).toBe(403);
+      expect(((await stranger.json()) as { message: string }).message).toBe(expected);
+      // Knowing an invited email is not enough, and the answer doesn't reveal that it was invited.
+      const noToken = await signUp("kofi@studio.gh");
+      expect(noToken.status).toBe(403);
+      expect(((await noToken.json()) as { message: string }).message).toBe(expected);
+      expect((await signUp("kofi@studio.gh", "wrong-token")).status).toBe(403);
+      // A valid token for a different email doesn't work either.
+      expect((await signUp("attacker@example.com", tokenOf(inv))).status).toBe(403);
+      expect((await signUp("revoked@studio.gh", tokenOf(revoked))).status).toBe(403);
 
-      const invited = await signUp("Kofi@Studio.GH");
+      const invited = await signUp("Kofi@Studio.GH", tokenOf(inv));
       expect(invited.ok).toBe(true);
       const [row] = await db().select().from(user).where(eq(user.email, "kofi@studio.gh"));
       expect(row).toMatchObject({ role: "member", status: "active" });
@@ -245,6 +264,7 @@ describe("invitations and sign-up modes", () => {
       expect(list.signupMode).toBe(mode);
       expect(list.invitations.find((i) => i.id === inv.id)).toMatchObject({ status: "accepted" });
       expect(list.invitations.find((i) => i.id === inv.id)?.acceptedAt).not.toBeNull();
+      expect(list.invitations.every((i) => i.inviteUrl === undefined)).toBe(true);
 
       // Used invitations cannot be revoked.
       const res = await revokeInvitationRoute(apiRequest(`/api/v1/admin/invitations/${inv.id}`, { method: "DELETE", user: admin }), ctx({ id: inv.id }));
@@ -252,15 +272,18 @@ describe("invitations and sign-up modes", () => {
     });
   }
 
-  it("in approval mode, uninvited sign-ups wait for approval and invited ones are active", async () => {
+  it("in approval mode, the invited role needs the invite link; without it the person waits for approval", async () => {
     const admin = await createTestUser({ role: "admin" });
-    await invite(admin, { email: "invited@studio.tg", role: "admin" });
+    const inv = await body<InvitationDto>(await invite(admin, { email: "invited@studio.tg", role: "admin" }));
+    await invite(admin, { email: "squatter@studio.tg", role: "admin" });
     expect((await signUp("someone@example.com")).ok).toBe(true);
-    expect((await signUp("invited@studio.tg")).ok).toBe(true);
+    expect((await signUp("squatter@studio.tg")).ok).toBe(true); // claims an invited email without the link
+    expect((await signUp("invited@studio.tg", tokenOf(inv))).ok).toBe(true);
     const rows = await db().select({ email: user.email, role: user.role, status: user.status }).from(user);
     expect(rows).toEqual(
       expect.arrayContaining([
         { email: "someone@example.com", role: "member", status: "pending" },
+        { email: "squatter@studio.tg", role: "member", status: "pending" },
         { email: "invited@studio.tg", role: "admin", status: "active" },
       ]),
     );

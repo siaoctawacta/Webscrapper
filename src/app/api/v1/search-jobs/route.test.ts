@@ -468,3 +468,44 @@ describe("POST /api/v1/search-jobs — spending", () => {
     expect(await db().select().from(usageLogs)).toHaveLength(0);
   });
 });
+
+describe("security: quota races and disabled accounts", () => {
+  it("parallel creates cannot exceed the concurrent-search limit", async () => {
+    setEnv({ MAX_CONCURRENT_JOBS_PER_USER: "2" });
+    const responses = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        createRoute(
+          apiRequest("/api/v1/search-jobs", { method: "POST", user: alice, body: { query: `hotel ${i}`, location: "Lomé, Togo", targetCount: 20 } }),
+          ctx({}),
+        ),
+      ),
+    );
+    const created = responses.filter((r) => r.status === 201).length;
+    expect(created).toBe(2);
+    expect(responses.filter((r) => r.status === 429).length).toBe(6);
+    const [{ n }] = (await db().select({ n: sql<number>`count(*)::int` }).from(searchJobs).where(eq(searchJobs.userId, alice.id))) as [{ n: number }];
+    expect(n).toBe(2);
+  });
+
+  it("disabling an account cancels its queued searches and asks running ones to stop", async () => {
+    const { PATCH: patchUser } = await import("@/app/api/v1/admin/users/[id]/route");
+    const admin = await createTestUser({ role: "admin" });
+    const queued = await insertJob(alice.id, { status: "queued" });
+    const running = await insertJob(alice.id, { status: "searching" });
+    const res = await patchUser(apiRequest(`/api/v1/admin/users/${alice.id}`, { method: "PATCH", user: admin, body: { status: "disabled" } }), ctx({ id: alice.id }));
+    expect(res.status).toBe(200);
+    const rows = await db().select().from(searchJobs).where(eq(searchJobs.userId, alice.id));
+    expect(rows.find((r) => r.id === queued.id)).toMatchObject({ status: "cancelled", cancelRequested: true });
+    expect(rows.find((r) => r.id === running.id)).toMatchObject({ status: "searching", cancelRequested: true });
+  });
+
+  it("the worker refuses to start a search whose owner is no longer active", async () => {
+    const { runSearchJob } = await import("@/server/search/runner");
+    const { user: userTable } = await import("@/server/db/schema");
+    const job = await insertJob(alice.id, { status: "queued" });
+    await db().update(userTable).set({ status: "disabled" }).where(eq(userTable.id, alice.id));
+    await runSearchJob(job.id);
+    const [row] = await db().select().from(searchJobs).where(eq(searchJobs.id, job.id));
+    expect(row).toMatchObject({ status: "cancelled", stopReason: "Cancelled because the account is not active." });
+  });
+});

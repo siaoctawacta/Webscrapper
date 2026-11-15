@@ -79,6 +79,7 @@ function setup(provider: BusinessProvider | (() => never), extra: Partial<Hydrat
     recordUsage: async (u) => {
       usage.push(u);
     },
+    remainingAllowance: async () => null,
     ...extra,
   };
   return { deps, usage, getProvider };
@@ -90,6 +91,23 @@ const quiet = () => {
 };
 
 describe("hydrateRows", () => {
+  it("never makes more billed lookups than the user's remaining monthly allowance", async () => {
+    const { provider, calls } = fakeProvider([livePlace("ChIJplace1"), livePlace("ChIJplace2"), livePlace("ChIJplace3")]);
+    let limited = 0;
+    const two = setup(provider, { remainingAllowance: async () => 2, onLimited: () => limited++ });
+    const out = await hydrateRows(user, [googleRow(1), googleRow(2), googleRow(3)], two.deps);
+    expect(calls.flat()).toEqual(["ChIJplace1", "ChIJplace2"]);
+    expect(out[2]!.liveFields).toEqual([]);
+    expect(limited).toBe(1);
+
+    const none = setup(provider, { remainingAllowance: async () => 0, onLimited: () => limited++ });
+    const rows = [googleRow(4)];
+    expect(await hydrateRows(user, rows, none.deps)).toEqual(rows);
+    expect(none.getProvider).toHaveBeenCalled();
+    expect(calls.flat()).toHaveLength(2);
+    expect(limited).toBe(2);
+  });
+
   it("fills only the restricted fields of Google rows and lists every one of them as live, even when empty", async () => {
     const { provider, calls, signals } = fakeProvider([
       livePlace("ChIJplace1", { websiteUrl: null, postalCode: null, mapsUrl: "https://elsewhere.example/" }),

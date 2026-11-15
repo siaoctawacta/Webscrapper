@@ -24,7 +24,7 @@ import {
   monthlyLimitMessage,
   remainingAllowanceNote,
 } from "./limits";
-import { assertJobSlots, getUserSearchLimits, type UserSearchLimits } from "./quotas";
+import { assertJobSlots, getUserSearchLimits, lockUserSearchCreation, reservedRequests, type UserSearchLimits } from "./quotas";
 import { parseCreateSearchInput, type CreateSearchInput } from "./schemas";
 import { resolveSearchTarget, type ResolvedSearch } from "./target";
 import { UsageRecorder } from "./usage-recorder";
@@ -195,6 +195,14 @@ export async function createSearchJob(
 
     const firstEvent = p.clamped ? clampMessage(limits.maxResultsPerSearch, p.requestedCount) : "Search queued — waiting for a worker.";
     const job = await db().transaction(async (tx) => {
+      // Re-check under a per-user lock: the earlier checks are only a fast path, and parallel requests
+      // must not all pass them before any of them is inserted.
+      await lockUserSearchCreation(tx, user.id);
+      await assertJobSlots(user.id, limits, new Date(), tx);
+      if (isBillable(provider) && limits.monthlyRequestLimit > 0) {
+        const reserved = await reservedRequests(tx, user.id, [provider.id]);
+        assertWithinMonthly(limits, p.usedThisMonth + reserved, p.estimate.estimatedRequests);
+      }
       const [inserted] = await tx
         .insert(searchJobs)
         .values({

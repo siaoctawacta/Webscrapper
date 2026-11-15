@@ -1,37 +1,64 @@
 import "server-only";
 import { betterAuth } from "better-auth";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { count, eq, sql } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../db";
 import { account, invitations, session, user, verification } from "../db/schema";
 import { env } from "../env";
 import type { UserRole, UserStatus } from "@/lib/domain";
+import { rateLimit } from "../rate-limit";
+import { hashToken, INVITE_TOKEN_HEADER, secretsEqual, SETUP_TOKEN_HEADER } from "./tokens";
+
+export type SignUpTokens = { invite?: string | null; setup?: string | null };
+
+const headerOf = (ctx: unknown, name: string): string | null =>
+  ((ctx as { headers?: Headers } | null)?.headers?.get(name) ?? null)?.trim() || null;
 
 /**
- * Decide role/status for a new account. Rules:
- *  - The very first account, and any email in ADMIN_EMAILS, becomes an active admin.
- *  - An invited email becomes active with the invited role.
- *  - Otherwise SIGNUP_MODE decides: approval → pending; invite/closed → rejected.
+ * Decide role/status for a new account. There is no email verification, so an email address alone
+ * never grants anything; proof comes from a secret token:
+ *  - The very first account becomes the admin. In production it must present SETUP_TOKEN
+ *    (via /sign-up?setup=<token>); in development no token is needed.
+ *  - An invite link token (hashed in `invitations`) for this exact email → active with the invited role.
+ *  - Otherwise SIGNUP_MODE decides: approval → pending; invite/closed → rejected (same answer whether or
+ *    not the email was invited, so sign-up can't be used to discover invitations).
  */
-export async function decideNewUser(email: string): Promise<{ role: UserRole; status: UserStatus; invitationId?: string }> {
+export async function decideNewUser(
+  email: string,
+  tokens: SignUpTokens = {},
+): Promise<{ role: UserRole; status: UserStatus; invitationId?: string }> {
   const e = env();
   const normalized = email.trim().toLowerCase();
-  if (e.ADMIN_EMAILS.includes(normalized)) return { role: "admin", status: "active" };
 
   // Serialize first-user bootstrap so two simultaneous sign-ups cannot both become admin.
   return db().transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(724001)`);
     const [{ n }] = (await tx.select({ n: count() }).from(user)) as [{ n: number }];
-    if (n === 0) return { role: "admin" as const, status: "active" as const };
+    if (n === 0) {
+      if (e.SETUP_TOKEN) {
+        if (!tokens.setup || !secretsEqual(tokens.setup, e.SETUP_TOKEN)) {
+          throw new APIError("FORBIDDEN", { message: "LeadFinder isn't set up yet. Open the setup link (/sign-up?setup=…) to create the first admin account." });
+        }
+      } else if (e.APP_ENV === "production") {
+        throw new APIError("FORBIDDEN", { message: "LeadFinder isn't set up yet. The server needs a SETUP_TOKEN to create the first admin account." });
+      }
+      return { role: "admin" as const, status: "active" as const };
+    }
 
-    const [invite] = await tx.select().from(invitations).where(eq(invitations.email, normalized)).limit(1);
-    if (invite && !invite.acceptedAt) return { role: invite.role, status: "active" as const, invitationId: invite.id };
+    if (tokens.invite) {
+      const [invite] = await tx
+        .select()
+        .from(invitations)
+        .where(and(eq(invitations.tokenHash, hashToken(tokens.invite)), eq(invitations.email, normalized), isNull(invitations.acceptedAt)))
+        .limit(1);
+      if (invite) return { role: invite.role, status: "active" as const, invitationId: invite.id };
+    }
 
     if (e.SIGNUP_MODE === "approval") return { role: "member" as const, status: "pending" as const };
     throw new APIError("FORBIDDEN", {
-      message: e.SIGNUP_MODE === "invite" ? "Sign-up is by invitation only." : "Sign-up is closed.",
+      message: e.SIGNUP_MODE === "invite" ? "Sign-up needs a valid invitation link. Ask your administrator for one." : "Sign-up is closed.",
     });
   });
 }
@@ -83,20 +110,40 @@ function createAuth() {
       },
       user: {
         create: {
-          before: async (u) => {
-            const decision = await decideNewUser(u.email);
+          before: async (u, ctx) => {
+            const decision = await decideNewUser(u.email, {
+              invite: headerOf(ctx, INVITE_TOKEN_HEADER),
+              setup: headerOf(ctx, SETUP_TOKEN_HEADER),
+            });
             return { data: { ...u, email: u.email.toLowerCase(), role: decision.role, status: decision.status } };
           },
-          after: async (u) => {
+          after: async (u, ctx) => {
+            const token = headerOf(ctx, INVITE_TOKEN_HEADER);
+            if (!token) return;
             await db()
               .update(invitations)
               .set({ acceptedAt: new Date() })
-              .where(eq(invitations.email, u.email.toLowerCase()));
+              .where(and(eq(invitations.tokenHash, hashToken(token)), eq(invitations.email, u.email.toLowerCase())));
           },
         },
       },
     },
+    hooks: {
+      // Per-account limit on password attempts. Unlike the per-IP limit above it cannot be dodged by
+      // spoofing X-Forwarded-For.
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-in/email" || e.APP_ENV === "test") return;
+        const email = typeof ctx.body?.email === "string" ? ctx.body.email.trim().toLowerCase() : "";
+        if (!email) return;
+        try {
+          await rateLimit(`signin:${email}`, 10, 15 * 60);
+        } catch {
+          throw new APIError("TOO_MANY_REQUESTS", { message: "Too many sign-in attempts for this account. Wait 15 minutes and try again." });
+        }
+      }),
+    },
     advanced: {
+      ipAddress: { ipAddressHeaders: [e.CLIENT_IP_HEADER] },
       useSecureCookies: e.APP_URL.startsWith("https://"),
       defaultCookieAttributes: { sameSite: "lax", httpOnly: true },
     },

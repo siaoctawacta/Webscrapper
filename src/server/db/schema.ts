@@ -113,6 +113,8 @@ export const invitations = pgTable("invitations", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   role: text("role").$type<UserRole>().notNull().default("member"),
+  /** SHA-256 of the secret invite-link token. Sign-up must present the token (email alone proves nothing). */
+  tokenHash: text("token_hash").unique(),
   invitedBy: text("invited_by").references(() => user.id, { onDelete: "set null" }),
   acceptedAt: ts("accepted_at"),
   createdAt: createdAt(),
