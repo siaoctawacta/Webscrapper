@@ -89,3 +89,19 @@ describe("phone display", () => {
     expect(displayPhone(null, null)).toBeNull();
   });
 });
+
+describe("queue options", () => {
+  it("never sends undefined option keys to pg-boss", async () => {
+    const { sendOptions } = await import("@/server/queue");
+    expect(sendOptions({})).toEqual({ retryLimit: 0 });
+    expect(Object.keys(sendOptions({ expireInSeconds: undefined, singletonKey: undefined }))).toEqual(["retryLimit"]);
+    expect(sendOptions({ expireInSeconds: 60, singletonKey: "k" })).toEqual({ retryLimit: 0, expireInSeconds: 60, singletonKey: "k" });
+  });
+
+  it("enqueues an export job without options against a real pg-boss", async () => {
+    const { enqueue, stopBoss } = await import("@/server/queue");
+    const id = await enqueue("export.run", { exportId: "00000000-0000-0000-0000-000000000000" });
+    expect(typeof id).toBe("string");
+    await stopBoss();
+  });
+});

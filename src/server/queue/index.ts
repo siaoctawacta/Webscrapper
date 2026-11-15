@@ -41,11 +41,19 @@ export async function enqueue<Q extends QueueName>(
   options: { singletonKey?: string; retryLimit?: number; expireInSeconds?: number } = {},
 ): Promise<string | null> {
   const boss = await getBoss();
-  return boss.send(name, data, {
+  return boss.send(name, data, sendOptions(options));
+}
+
+/**
+ * pg-boss validates option keys that are present even when undefined (e.g. `expireInSeconds:
+ * undefined` fails its "at least every second" assert), so only pass the options that were given.
+ */
+export function sendOptions(options: { singletonKey?: string; retryLimit?: number; expireInSeconds?: number }) {
+  return {
     retryLimit: options.retryLimit ?? 0,
-    singletonKey: options.singletonKey,
-    expireInSeconds: options.expireInSeconds,
-  });
+    ...(options.singletonKey !== undefined ? { singletonKey: options.singletonKey } : {}),
+    ...(options.expireInSeconds !== undefined ? { expireInSeconds: options.expireInSeconds } : {}),
+  };
 }
 
 export async function stopBoss() {
