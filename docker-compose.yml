@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: leadfinder
-      POSTGRES_PASSWORD: leadfinder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-leadfinder}
       POSTGRES_DB: leadfinder
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
@@ -23,7 +23,7 @@ services:
     command: ["node_modules/.bin/tsx", "src/server/db/migrate.ts"]
     env_file: .env
     environment:
-      DATABASE_URL: postgres://leadfinder:leadfinder@db:5432/leadfinder
+      DATABASE_URL: postgres://leadfinder:${POSTGRES_PASSWORD:-leadfinder}@db:5432/leadfinder
     depends_on:
       db: { condition: service_healthy }
 
@@ -33,7 +33,7 @@ services:
     command: ["node_modules/.bin/next", "start", "--hostname", "0.0.0.0", "--port", "3000"]
     env_file: .env
     environment:
-      DATABASE_URL: postgres://leadfinder:leadfinder@db:5432/leadfinder
+      DATABASE_URL: postgres://leadfinder:${POSTGRES_PASSWORD:-leadfinder}@db:5432/leadfinder
       EXPORT_STORAGE_DIR: /app/storage/exports
     expose: ["3000"]
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
     command: ["node_modules/.bin/tsx", "--tsconfig", "tsconfig.worker.json", "src/worker/index.ts"]
     env_file: .env
     environment:
-      DATABASE_URL: postgres://leadfinder:leadfinder@db:5432/leadfinder
+      DATABASE_URL: postgres://leadfinder:${POSTGRES_PASSWORD:-leadfinder}@db:5432/leadfinder
       EXPORT_STORAGE_DIR: /app/storage/exports
     volumes: [exports:/app/storage/exports]
     restart: unless-stopped
