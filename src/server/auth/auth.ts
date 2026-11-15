@@ -9,6 +9,7 @@ import { account, invitations, session, user, verification } from "../db/schema"
 import { env } from "../env";
 import type { UserRole, UserStatus } from "@/lib/domain";
 import { rateLimit } from "../rate-limit";
+import { HttpError } from "../errors";
 import { hashToken, INVITE_TOKEN_HEADER, secretsEqual, SETUP_TOKEN_HEADER } from "./tokens";
 
 export type SignUpTokens = { invite?: string | null; setup?: string | null };
@@ -137,8 +138,13 @@ function createAuth() {
         if (!email) return;
         try {
           await rateLimit(`signin:${email}`, 10, 15 * 60);
-        } catch {
-          throw new APIError("TOO_MANY_REQUESTS", { message: "Too many sign-in attempts for this account. Wait 15 minutes and try again." });
+        } catch (err) {
+          // Only a real rate-limit hit becomes 429. Anything else (e.g. the database is unreachable)
+          // must surface as the error it is, not as "too many attempts".
+          if (err instanceof HttpError && err.code === "rate_limited") {
+            throw new APIError("TOO_MANY_REQUESTS", { message: "Too many sign-in attempts for this account. Wait 15 minutes and try again." });
+          }
+          throw err;
         }
       }),
     },

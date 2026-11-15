@@ -1,5 +1,6 @@
 /** Applies SQL migrations from ./drizzle. Run with `pnpm db:migrate`. */
-import "dotenv/config";
+import "../load-env";
+import { explainDbConnectionError } from "./connection-help";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
@@ -20,7 +21,8 @@ if (isMain) {
   runMigrations(url)
     .then(() => console.log("Migrations applied"))
     .catch((e) => {
-      console.error(e);
+      const hint = explainDbConnectionError(e, url);
+      console.error(hint ? `Migrations failed: cannot connect to the database.\n  ${hint}` : e);
       process.exit(1);
     });
 }

@@ -325,7 +325,9 @@ docker compose logs -f web worker proxy <span class="c"># Ctrl+C pour quitter</s
       <tr><td><code>DOMAIN</code></td><td>Docker : domaine pour le HTTPS automatique de Caddy. Vide = HTTP sur le port 80.</td><td>—</td></tr>
       <tr><td><code>BETTER_AUTH_SECRET</code> ★</td><td>Secret de signature des sessions (32 caractères ou plus).</td><td>—</td></tr>
       <tr><td><code>SETUP_TOKEN</code> ★</td><td>Jeton requis pour créer le premier compte administrateur (<code>/sign-up?setup=…</code>).</td><td>—</td></tr>
-      <tr><td><code>DATABASE_URL</code></td><td>Connexion PostgreSQL (calculée automatiquement par Docker Compose).</td><td>local</td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>Connexion PostgreSQL (calculée automatiquement par Docker Compose). Pour Supabase : chaîne « Session pooler » suivie de <code>?uselibpqcompat=true&amp;sslmode=require</code> (voir chapitre 8).</td><td>local</td></tr>
+      <tr><td><code>DB_POOL_MAX</code></td><td>Connexions à la base gardées ouvertes par l’application web et par le worker. À baisser (ex. 5) sur les offres hébergées limitées.</td><td>10</td></tr>
+      <tr><td><code>QUEUE_POOL_MAX</code></td><td>Connexions supplémentaires utilisées par la file d’attente (pg-boss).</td><td>4</td></tr>
       <tr><td><code>POSTGRES_PASSWORD</code> ★</td><td>Docker : mot de passe de la base intégrée.</td><td>leadfinder</td></tr>
       <tr><td><code>SIGNUP_MODE</code></td><td><code>approval</code> (inscription libre, approbation admin), <code>invite</code> (lien d’invitation obligatoire), <code>closed</code>.</td><td>approval</td></tr>
       <tr><td><code>CLIENT_IP_HEADER</code></td><td>En-tête contenant l’IP du visiteur. Garder la valeur par défaut derrière Caddy ; <code>cf-connecting-ip</code> derrière Cloudflare.</td><td>x-forwarded-for</td></tr>
@@ -451,6 +453,17 @@ df -h                                           <span class="c"># espace disque<
     <li>Un second worker sur la même machine : <code>docker compose up -d --scale worker=2</code> (les tâches sont réparties automatiquement).</li>
     <li>PostgreSQL géré (Neon, Supabase, RDS…) : renseignez son <code>DATABASE_URL</code> dans les services et retirez le service <code>db</code>.</li>
   </ul>
+
+  <h3>Utiliser Supabase comme base de données</h3>
+  <ol class="steps">
+    <li>Dans Supabase, ouvrez <strong>Connect</strong> et copiez la chaîne <strong>Session pooler</strong> (hôte <code>aws-…pooler.supabase.com</code>, port 5432, utilisateur <code>postgres.&lt;ref&gt;</code>). N’utilisez pas la « Direct connection » <code>db.&lt;ref&gt;.supabase.co</code> : elle ne répond qu’en IPv6, et la plupart des box et de nombreux serveurs échouent avec <code>getaddrinfo ENOTFOUND</code>.</li>
+    <li>Remplacez <code>[YOUR-PASSWORD]</code> par le mot de passe de la base (caractères spéciaux encodés : <code>@</code> → <code>%40</code>, <code>#</code> → <code>%23</code>, <code>/</code> → <code>%2F</code>) et ajoutez <code>?uselibpqcompat=true&amp;sslmode=require</code> à la fin.</li>
+    <li>Appliquez les migrations, puis redémarrez l’application et le worker.</li>
+  </ol>
+<pre>DATABASE_URL=postgresql://postgres.&lt;ref&gt;:&lt;mot-de-passe&gt;@aws-0-&lt;region&gt;.pooler.supabase.com:5432/postgres?uselibpqcompat=true&amp;sslmode=require
+DB_POOL_MAX=5
+QUEUE_POOL_MAX=4</pre>
+  <p class="muted small">En local, <code>pnpm dev</code>, <code>pnpm worker</code>, <code>pnpm db:migrate</code> et <code>pnpm user:set-password</code> lisent <code>.env.local</code> puis <code>.env</code>. Un projet Supabase gratuit se met en pause après une semaine d’inactivité : réactivez-le depuis le tableau de bord.</p>
 </section>
 
 <!-- 9 -->
@@ -491,7 +504,12 @@ df -h                                           <span class="c"># espace disque<
       <tr><td>« Google rejected the API key… »</td><td>Places API (New) non activée, facturation absente, ou restriction IP qui ne correspond pas à l’IP du serveur.</td></tr>
       <tr><td>Bandeau « Sample data mode »</td><td><code>GOOGLE_MAPS_API_KEY</code> vide ou mal lue. Vérifiez <code>.env</code> puis <code>docker compose up -d</code>.</td></tr>
       <tr><td>Noms manquants dans une collection</td><td>Les données Google y sont rechargées en direct : clé absente, limite mensuelle atteinte (un message l’indique), ou panne Google.</td></tr>
-      <tr><td>« Too many requests »</td><td>Limite anti-abus atteinte : patientez une minute. Pour la connexion : 15 minutes par compte.</td></tr>
+      <tr><td>« Too many attempts » / « Too many sign-in attempts »</td><td>Limite anti-abus réellement atteinte : patientez une minute (par adresse IP) ou 15 minutes (par compte).</td></tr>
+      <tr><td>Connexion : « …a problem on the server (often the database can’t be reached) »</td><td>La base de données ne répond pas. Vérifiez <code>DATABASE_URL</code> (voir ci-dessous) et les journaux de l’application.</td></tr>
+      <tr><td>Worker ou migrations : <code>getaddrinfo ENOTFOUND db.&lt;ref&gt;.supabase.co</code></td><td>Hôte direct Supabase (IPv6 uniquement) ou projet en pause. Utilisez la chaîne « Session pooler » + <code>?uselibpqcompat=true&amp;sslmode=require</code> (chapitre 8), puis <code>pnpm db:migrate</code> et redémarrez.</td></tr>
+      <tr><td><code>password authentication failed</code> / <code>Tenant or user not found</code></td><td>Mot de passe erroné ou non encodé, ou utilisateur <code>postgres</code> au lieu de <code>postgres.&lt;ref&gt;</code> avec le pooler.</td></tr>
+      <tr><td><code>self-signed certificate in certificate chain</code></td><td>Ajoutez <code>uselibpqcompat=true</code> devant <code>sslmode=require</code> dans <code>DATABASE_URL</code>.</td></tr>
+      <tr><td><code>too many clients</code> / <code>max client connections reached</code></td><td>Baissez <code>DB_POOL_MAX</code> et <code>QUEUE_POOL_MAX</code>, ou augmentez la taille du pooler dans Supabase.</td></tr>
       <tr><td>Export qui ne se télécharge pas</td><td>Le lien a expiré (15 min) : rouvrez l’export. Pour les gros exports, vérifiez que le worker tourne et que le volume <code>exports</code> est partagé.</td></tr>
       <tr><td>« Something went wrong » + référence</td><td>Cherchez la référence dans <code>docker compose logs web</code>. Après une mise à jour, vérifiez que <code>migrate</code> s’est terminé avec le code 0.</td></tr>
       <tr><td>Disque plein</td><td><code>docker system prune</code> (anciennes images), purge des anciennes sauvegardes, agrandissement du disque.</td></tr>

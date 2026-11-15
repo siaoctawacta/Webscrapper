@@ -35,3 +35,15 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/%2F%2Fevil.com")).toBe("/%2F%2Fevil.com");
   });
 });
+
+import { signInErrorMessage, signUpErrorMessage } from "./auth-messages";
+
+describe("auth error messages", () => {
+  it("uses the server's wait time for rate limits and explains server problems", () => {
+    expect(signInErrorMessage({ status: 429, message: "Too many sign-in attempts for this account. Wait 15 minutes and try again." })).toMatch(/15 minutes/);
+    expect(signInErrorMessage({ status: 429 })).toMatch(/Wait a minute/);
+    expect(signInErrorMessage({ status: 500, message: "Internal Server Error" })).toMatch(/problem on the server/);
+    expect(signUpErrorMessage({ status: 503 })).toMatch(/problem on the server/);
+    expect(signInErrorMessage({ status: 401 })).toMatch(/don't match/);
+  });
+});

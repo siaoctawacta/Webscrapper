@@ -79,6 +79,23 @@ pnpm worker
 
 Open http://localhost:3000 and sign up — the first account becomes the admin. (In production, set `SETUP_TOKEN` and create the first account at `/sign-up?setup=<SETUP_TOKEN>`.)
 
+`pnpm dev`, `pnpm worker`, `pnpm db:migrate` and `pnpm user:set-password` all read `.env.local` first, then `.env`.
+
+### Using Supabase (or another hosted Postgres)
+
+1. In Supabase, open **Connect** and copy the **Session pooler** connection string (`postgres.<ref>@aws-…pooler.supabase.com:5432`). Don't use the *Direct connection* host `db.<ref>.supabase.co`: it only answers over IPv6, and most home networks and many servers fail with `getaddrinfo ENOTFOUND`.
+2. Put your database password in place of `[YOUR-PASSWORD]` (URL-encode special characters: `@` → `%40`, `#` → `%23`, `/` → `%2F`) and add `?uselibpqcompat=true&sslmode=require` at the end:
+
+   ```
+   DATABASE_URL=postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?uselibpqcompat=true&sslmode=require
+   DB_POOL_MAX=5
+   QUEUE_POOL_MAX=4
+   ```
+
+3. Run `pnpm db:migrate`, then restart `pnpm dev` and `pnpm worker`.
+
+If the database can't be reached, the worker and `pnpm db:migrate` print the likely cause and the fix (wrong host, paused project, wrong password, SSL setting…), and the sign-in page says the server has a problem instead of showing a misleading message.
+
 ### Turning on real data (Google Places API)
 
 1. In Google Cloud, create a project with billing enabled and enable **Places API (New)**.

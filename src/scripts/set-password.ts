@@ -5,7 +5,7 @@
  *   docker compose exec web node_modules/.bin/tsx --tsconfig tsconfig.worker.json src/scripts/set-password.ts someone@example.com 'new-password'
  * Signs the user out everywhere.
  */
-import "dotenv/config";
+import "@/server/load-env";
 import { and, eq } from "drizzle-orm";
 import { getAuth } from "@/server/auth/auth";
 import { closeDb, db } from "@/server/db";
