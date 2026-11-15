@@ -402,7 +402,9 @@ function nameVariant(rng: Rng, name: string, region: Region, strictOnly: boolean
   if (plain !== name) options.push([plain, 3]);
   options.push([name.toUpperCase(), 2]);
   if (!strictOnly) {
-    if (words.length >= 3) options.push([words.slice(1).join(" "), 2]);
+    // Dropping the leading type word ("Hôtel Le Palmier" → "Le Palmier") only reads as a real
+    // listing when what's left starts like a name (not "d'hôtes Chez Afi").
+    if (words.length >= 3 && /^\p{Lu}/u.test(words[1] ?? "")) options.push([words.slice(1).join(" "), 2]);
     if (region.inCity) options.push([`${name} ${region.city.def.name}`, 2]);
     if (region.hood) options.push([`${name} - ${region.hood.name}`, 2]);
     if (name.includes("&")) options.push([name.replace("&", region.city.country.language === "fr" ? "et" : "and"), 2]);

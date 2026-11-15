@@ -111,8 +111,12 @@ export async function listLeads(
     collectionFacets(user, collectionId),
   ]);
   const rows = page.map((r) => leadToRow(r.lead, r.business));
+  let liveDetailsLimited = false;
+  const hydrateDeps = { ...deps?.hydrate, onLimited: () => (liveDetailsLimited = true) };
+  const hydrated = await maybeHydrate(user, rows, opts?.hydrate, { ...deps, hydrate: hydrateDeps });
   return {
-    rows: await maybeHydrate(user, rows, opts?.hydrate, deps),
+    ...(liveDetailsLimited ? { liveDetailsLimited } : {}),
+    rows: hydrated,
     total: Number(totalRows[0]?.n ?? 0),
     page: query.page,
     pageSize: query.pageSize,

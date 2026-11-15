@@ -73,9 +73,19 @@ export function assertSameOrigin(req: Request) {
   if (!allowed.has(o.host)) throw new HttpError("forbidden", "Cross-origin request blocked");
 }
 
+/**
+ * Client IP from the header your proxy sets (CLIENT_IP_HEADER). For X-Forwarded-For the left-most
+ * entries are client-controlled, so take the entry just before the TRUSTED_PROXY_HOPS proxies that
+ * appended to it. Used for per-IP rate limits and audit logs.
+ */
 export function clientIp(req: Request): string | null {
-  const fwd = req.headers.get("x-forwarded-for");
-  return fwd?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
+  const { CLIENT_IP_HEADER: header, TRUSTED_PROXY_HOPS: hops } = env();
+  const raw = req.headers.get(header);
+  if (!raw) return null;
+  if (header !== "x-forwarded-for") return raw.trim() || null;
+  const parts = raw.split(",").map((p) => p.trim()).filter(Boolean);
+  if (!parts.length) return null;
+  return parts[Math.max(0, parts.length - Math.max(1, hops))] ?? null;
 }
 
 type Params = Record<string, string | string[]>;

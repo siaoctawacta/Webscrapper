@@ -148,8 +148,8 @@ export function LeadNotesEditor({ row, onUpdated }: { row: BusinessRow; onUpdate
     onUpdated(r);
     toast.success("Notes saved");
   });
+  // The parent keys this editor by lead id, so the draft resets when another lead is opened.
   const [notes, setNotes] = React.useState(row.lead?.notes ?? "");
-  React.useEffect(() => setNotes(row.lead?.notes ?? ""), [row.id, row.lead?.notes]);
   const dirty = notes !== (row.lead?.notes ?? "");
   return (
     <div className="grid gap-2">

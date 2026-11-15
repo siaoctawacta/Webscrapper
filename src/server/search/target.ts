@@ -27,6 +27,8 @@ export type TargetDeps = {
    * so typing in the form never costs Google requests). Defaults to true.
    */
   geocode?: boolean;
+  /** Runs right before a (possibly billable) geocoding request; may throw to refuse the search first. */
+  beforeGeocode?: () => Promise<void>;
 };
 
 export const LOCATION_NOT_FOUND_MESSAGE = "We couldn't find that location. Try a city and country, for example “Lomé, Togo”.";
@@ -44,6 +46,7 @@ function locationFromGeocode(g: GeocodeResult): SearchLocation {
 }
 
 async function geocodeOrThrow(provider: BusinessProvider, text: string, message: string, deps: TargetDeps): Promise<SearchLocation> {
+  await deps.beforeGeocode?.();
   let g: GeocodeResult | null;
   try {
     g = await provider.geocode(text, { signal: deps.signal, onUsage: deps.onUsage });

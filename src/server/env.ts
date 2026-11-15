@@ -21,15 +21,15 @@ const schema = z.object({
   BETTER_AUTH_SECRET: z.string().optional(),
 
   SIGNUP_MODE: z.enum(["approval", "invite", "closed"]).default("approval"),
-  ADMIN_EMAILS: z
-    .string()
-    .optional()
-    .transform((v) =>
-      (v ?? "")
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean),
-    ),
+  /**
+   * Required in production to create the first (admin) account: open /sign-up?setup=<SETUP_TOKEN>.
+   * Without email verification, an email address alone can't prove who is signing up.
+   */
+  SETUP_TOKEN: z.string().optional().transform(placeholder),
+  /** Header holding the client IP, set by your reverse proxy/platform (e.g. x-forwarded-for, cf-connecting-ip). */
+  CLIENT_IP_HEADER: z.string().default("x-forwarded-for").transform((v) => v.toLowerCase()),
+  /** For x-forwarded-for: how many trusted proxies append to it (the client is the entry before them). */
+  TRUSTED_PROXY_HOPS: num(1),
 
   GOOGLE_MAPS_API_KEY: z.string().optional().transform(placeholder),
   GOOGLE_TEXT_SEARCH_PRICE_PER_1000: num(35),

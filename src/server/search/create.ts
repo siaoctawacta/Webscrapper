@@ -24,7 +24,7 @@ import {
   monthlyLimitMessage,
   remainingAllowanceNote,
 } from "./limits";
-import { assertJobSlots, getUserSearchLimits, type UserSearchLimits } from "./quotas";
+import { assertJobSlots, getUserSearchLimits, lockUserSearchCreation, reservedRequests, type UserSearchLimits } from "./quotas";
 import { parseCreateSearchInput, type CreateSearchInput } from "./schemas";
 import { resolveSearchTarget, type ResolvedSearch } from "./target";
 import { UsageRecorder } from "./usage-recorder";
@@ -32,6 +32,12 @@ import { UsageRecorder } from "./usage-recorder";
 export const GOOGLE_NOT_CONFIGURED_MESSAGE =
   "Google Maps isn't set up on this server yet, so only sample data is available. Ask an administrator to add a Google Maps API key.";
 export const QUEUE_UNAVAILABLE_MESSAGE = "We couldn't start the search right now because the background worker queue is unavailable. Please try again in a moment.";
+
+/**
+ * How long the queue lets one search run before treating it as overrun. Large Google searches with
+ * thousands of website visits can take an hour; the runner itself never gives up mid-way.
+ */
+export const SEARCH_RUN_EXPIRE_SECONDS = 6 * 3600;
 
 export type SearchDeps = {
   /** Use this provider instead of the registry (tests). */
@@ -83,6 +89,14 @@ async function prepare(
     onUsage: opts.usage?.onUsage,
     // The live estimate never spends billable requests on geocoding.
     geocode: opts.mode === "create" || provider.isSample,
+    // Refuse an over-budget search before paying for the geocoding request.
+    beforeGeocode:
+      opts.mode === "create"
+        ? () => {
+            const planned = clampTarget(input.targetCount, limits.maxResultsPerSearch).targetCount;
+            return assertMonthlyAllowance(user, provider, limits, provider.estimate(planned).estimatedRequests);
+          }
+        : undefined,
   });
 
   const requestedCount = target.singlePlace ? 1 : input.targetCount;
@@ -116,6 +130,23 @@ export async function estimateSearch(
   const input = parseCreateSearchInput(raw);
   const p = await prepare(user, input, deps, { mode: "estimate" });
   return { ...p.estimate, locationLabel: p.target.location.label, targetCount: p.targetCount, kind: p.target.kind };
+}
+
+function assertWithinMonthly(limits: UserSearchLimits, used: number, needed: number) {
+  if (limits.monthlyRequestLimit > 0 && used + needed > limits.monthlyRequestLimit) {
+    throw new HttpError("quota_exceeded", monthlyLimitMessage({ needed, used, limit: limits.monthlyRequestLimit }), {
+      limit: "monthly_requests",
+      max: limits.monthlyRequestLimit,
+      used,
+      needed,
+    });
+  }
+}
+
+/** Monthly allowance check against what is already recorded (used before spending a geocoding request). */
+async function assertMonthlyAllowance(user: UserRef, provider: BusinessProvider, limits: UserSearchLimits, needed: number) {
+  if (!isBillable(provider) || limits.monthlyRequestLimit <= 0) return;
+  assertWithinMonthly(limits, await billableRequestsThisMonth(user.id), needed);
 }
 
 async function findByIdempotencyKey(user: UserRef, key: string): Promise<SearchJob | undefined> {
@@ -155,13 +186,7 @@ export async function createSearchJob(
   try {
     const p = await prepare(user, input, deps, { mode: "create", usage, limits, provider });
 
-    if (isBillable(provider) && limits.monthlyRequestLimit > 0 && p.usedThisMonth + p.estimate.estimatedRequests > limits.monthlyRequestLimit) {
-      throw new HttpError(
-        "quota_exceeded",
-        monthlyLimitMessage({ needed: p.estimate.estimatedRequests, used: p.usedThisMonth, limit: limits.monthlyRequestLimit }),
-        { limit: "monthly_requests", max: limits.monthlyRequestLimit, used: p.usedThisMonth, needed: p.estimate.estimatedRequests },
-      );
-    }
+    if (isBillable(provider)) assertWithinMonthly(limits, p.usedThisMonth, p.estimate.estimatedRequests);
     if (p.estimate.requiresConfirmation && !input.confirm) {
       throw new HttpError("confirmation_required", confirmationMessage(p.estimate.estimatedCostUsd, p.estimate.estimatedRequests), {
         estimate: p.estimate,
@@ -170,6 +195,14 @@ export async function createSearchJob(
 
     const firstEvent = p.clamped ? clampMessage(limits.maxResultsPerSearch, p.requestedCount) : "Search queued — waiting for a worker.";
     const job = await db().transaction(async (tx) => {
+      // Re-check under a per-user lock: the earlier checks are only a fast path, and parallel requests
+      // must not all pass them before any of them is inserted.
+      await lockUserSearchCreation(tx, user.id);
+      await assertJobSlots(user.id, limits, new Date(), tx);
+      if (isBillable(provider) && limits.monthlyRequestLimit > 0) {
+        const reserved = await reservedRequests(tx, user.id, [provider.id]);
+        assertWithinMonthly(limits, p.usedThisMonth + reserved, p.estimate.estimatedRequests);
+      }
       const [inserted] = await tx
         .insert(searchJobs)
         .values({
@@ -212,7 +245,7 @@ export async function createSearchJob(
 
     let queueJobId: string | null;
     try {
-      queueJobId = await (deps.enqueue ?? enqueueJob)("search.run", { jobId: job.id });
+      queueJobId = await (deps.enqueue ?? enqueueJob)("search.run", { jobId: job.id }, { expireInSeconds: SEARCH_RUN_EXPIRE_SECONDS });
     } catch (e) {
       console.error("[search] enqueue failed", e);
       await db().delete(searchJobs).where(and(eq(searchJobs.id, job.id), eq(searchJobs.userId, user.id)));

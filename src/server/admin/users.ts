@@ -1,9 +1,9 @@
 import "server-only";
-import { and, count, desc, eq, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { audit } from "../audit";
 import type { AppUser } from "../auth/session";
 import { db, type DbOrTx } from "../db";
-import { session, usageLogs, user, userSettings } from "../db/schema";
+import { searchJobs, session, usageLogs, user, userSettings } from "../db/schema";
 import { env } from "../env";
 import { HttpError, notFound } from "../errors";
 import { startOfMonthUtc } from "../usage";
@@ -136,6 +136,16 @@ export async function updateUser(
     if (plan.revokeSessions) {
       const deleted = await tx.delete(session).where(eq(session.userId, targetId)).returning({ id: session.id });
       sessionsRevoked = deleted.length;
+      // A disabled account must stop spending: cancel queued searches and ask running ones to stop.
+      const stoppedAt = new Date();
+      await tx
+        .update(searchJobs)
+        .set({ status: "cancelled", cancelRequested: true, stopReason: "Cancelled because the account was disabled.", finishedAt: stoppedAt })
+        .where(and(eq(searchJobs.userId, targetId), eq(searchJobs.status, "queued")));
+      await tx
+        .update(searchJobs)
+        .set({ cancelRequested: true })
+        .where(and(eq(searchJobs.userId, targetId), inArray(searchJobs.status, ["searching", "enriching"])));
     }
     if (Object.keys(plan.after).length) {
       await audit(

@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { and, eq, sql } from "drizzle-orm";
 import { db, closeDb } from "@/server/db";
 import { searchJobs, searchResults, user } from "@/server/db/schema";
@@ -77,5 +77,68 @@ describe("disabled accounts", () => {
     const res = await getAuth().api.signInEmail({ body: { email: u.email, password: "correct-horse-battery-staple" }, asResponse: true });
     expect(res.status).toBe(403);
     expect(await res.text()).toMatch(/disabled/i);
+  });
+});
+
+describe("phone display", () => {
+  it("shows valid numbers internationally and keeps others as provided", async () => {
+    const { displayPhone } = await import("@/server/rows");
+    expect(displayPhone("92 38 67 38", "+22892386738")).toBe("+228 92 38 67 38");
+    expect(displayPhone("+233 24 123 4567", "+233241234567")).toBe("+233 24 123 4567");
+    expect(displayPhone("12", null)).toBe("12");
+    expect(displayPhone(null, null)).toBeNull();
+  });
+});
+
+describe("queue options", () => {
+  it("never sends undefined option keys to pg-boss", async () => {
+    const { sendOptions } = await import("@/server/queue");
+    expect(sendOptions({})).toEqual({ retryLimit: 0 });
+    expect(Object.keys(sendOptions({ expireInSeconds: undefined, singletonKey: undefined }))).toEqual(["retryLimit"]);
+    expect(sendOptions({ expireInSeconds: 60, singletonKey: "k" })).toEqual({ retryLimit: 0, expireInSeconds: 60, singletonKey: "k" });
+  });
+
+  it("enqueues an export job without options against a real pg-boss", async () => {
+    const { enqueue, stopBoss } = await import("@/server/queue");
+    const id = await enqueue("export.run", { exportId: "00000000-0000-0000-0000-000000000000" });
+    expect(typeof id).toBe("string");
+    await stopBoss();
+  });
+});
+
+describe("first admin account", () => {
+  const signUpWith = (email: string, setup?: string) =>
+    getAuth().api.signUpEmail({
+      body: { email, password: "a-long-password-1", name: "Owner" },
+      headers: new Headers(setup ? { "x-setup-token": setup } : {}),
+      asResponse: true,
+    });
+  const reset = async () => {
+    const { resetEnvCache } = await import("@/server/env");
+    resetEnvCache();
+    delete (globalThis as { __leadfinderAuth?: unknown }).__leadfinderAuth;
+  };
+  afterEach(async () => {
+    delete process.env.SETUP_TOKEN;
+    process.env.APP_ENV = "test";
+    await reset();
+  });
+
+  it("requires SETUP_TOKEN when it is configured", async () => {
+    process.env.SETUP_TOKEN = "s3cret-setup-token-value";
+    await reset();
+    expect((await signUpWith("a@example.com")).status).toBe(403);
+    expect((await signUpWith("a@example.com", "guess")).status).toBe(403);
+    expect((await signUpWith("owner@example.com", "s3cret-setup-token-value")).ok).toBe(true);
+    const [row] = await db().select().from(user);
+    expect(row).toMatchObject({ email: "owner@example.com", role: "admin", status: "active" });
+  });
+
+  it("refuses to bootstrap in production without SETUP_TOKEN", async () => {
+    process.env.APP_ENV = "production";
+    await reset();
+    const res = await signUpWith("a@example.com");
+    expect(res.status).toBe(403);
+    expect(await res.text()).toMatch(/SETUP_TOKEN/);
   });
 });

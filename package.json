@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "worker": "tsx --conditions=react-server src/worker/index.ts",
+    "worker": "tsx --tsconfig tsconfig.worker.json src/worker/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

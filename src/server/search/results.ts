@@ -70,6 +70,10 @@ export async function searchResultFacets(user: UserRef, jobId: string): Promise<
 export async function listSearchResults(user: AppUser, jobId: string, query: ListQuery): Promise<ListResponse> {
   const job = await getOwnedJob(user, jobId);
   const where = whereFor(user, job.id, query);
+  // API callers are limited to PAGE_SIZES by parseListQuery; internal callers (exports) may page in
+  // bigger chunks, bounded here.
+  const pageSize = Math.max(1, Math.min(MAX_BULK_ROWS, Math.floor(query.pageSize) || 1));
+  const page = Math.max(1, Math.floor(query.page) || 1);
   const [totalRow, rows, facets] = await Promise.all([
     db().select({ n: count() }).from(searchResults).where(where),
     db()
@@ -77,15 +81,15 @@ export async function listSearchResults(user: AppUser, jobId: string, query: Lis
       .from(searchResults)
       .where(where)
       .orderBy(...buildOrderBy(query, RESULTS_GRID))
-      .limit(query.pageSize)
-      .offset((query.page - 1) * query.pageSize),
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
     searchResultFacets(user, job.id),
   ]);
   return {
     rows: rows.map(searchResultToRow),
     total: Number(totalRow[0]?.n ?? 0),
-    page: query.page,
-    pageSize: query.pageSize,
+    page,
+    pageSize,
     query,
     facets,
     policies: [policyInfo(job.provider)],

@@ -44,8 +44,6 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
     placeholderData: keepPreviousData,
   });
 
-  const filterKey = JSON.stringify([query.filters, query.search, query.sort]);
-  React.useEffect(() => setSelection(emptySelection()), [filterKey]);
 
   /** Replace one row in the cached page after an inline edit (no refetch → no live re-hydration cost). */
   const patchRow = React.useCallback(
@@ -120,7 +118,12 @@ export function CollectionView({ collectionId }: { collectionId: string }) {
         </div>
       </div>
 
-      {hasRestricted && (
+      {leads.data?.liveDetailsLimited && (
+        <Notice tone="warning" icon={<TriangleAlert />}>
+          Your monthly Google request limit is reached, so some names, phones and addresses can’t be loaded live until next month. Your own notes, tags and statuses are unaffected. An admin can raise your limit.
+        </Notice>
+      )}
+      {hasRestricted && !leads.data?.liveDetailsLimited && (
         <Notice icon={<Info />}>
           {hasLive
             ? "Names, phones and addresses of Google Maps leads are loaded live for this page (Google doesn’t allow storing them). Your status, tags, notes and the emails found on websites are saved."
@@ -300,7 +303,7 @@ function LeadPanel({ row, suggestions, onUpdated }: { row: BusinessRow; suggesti
       </div>
       <div className="grid gap-1.5">
         <Label>Notes</Label>
-        <LeadNotesEditor row={row} onUpdated={onUpdated} />
+        <LeadNotesEditor key={row.id} row={row} onUpdated={onUpdated} />
       </div>
     </section>
   );

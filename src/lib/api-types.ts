@@ -123,6 +123,8 @@ export type ListResponse<Row = BusinessRow> = {
   query: ListQuery;
   facets: { categories: Facet[]; cities: Facet[]; websiteStatus: Facet[]; tags?: Facet[]; leadStatus?: Facet[] };
   policies: SourcePolicyInfo[];
+  /** Collections: some restricted details weren't loaded live because the monthly request limit is reached. */
+  liveDetailsLimited?: boolean;
 };
 
 export type CostEstimate = {

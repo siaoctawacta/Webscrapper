@@ -13,7 +13,6 @@
  */
 
 /** Characters 0x00–0x1F and 0x7F, except the line feed (0x0A). */
-// eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u0009\u000B-\u001F\u007F]/g;
 
 /** "+228 90 12 34 56", "-5", "+1 (555) 010-0000", "-12.5" — signs followed only by digits and separators. */

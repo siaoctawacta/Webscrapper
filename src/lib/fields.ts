@@ -112,5 +112,16 @@ export const isFieldKey = (v: string): v is FieldKey => (FIELD_KEYS as readonly 
 
 export const fieldsFor = (ctx: FieldContext) => FIELD_KEYS.filter((k) => FIELDS[k].contexts.includes(ctx));
 export const sortableFieldsFor = (ctx: FieldContext) => fieldsFor(ctx).filter((k) => FIELDS[k].sortable);
-export const defaultColumns = (ctx: FieldContext) => fieldsFor(ctx).filter((k) => FIELDS[k].defaultVisible);
+/** Columns pulled to the front (right after the business name) in each grid. */
+const LEADING_COLUMNS: Record<FieldContext, FieldKey[]> = {
+  results: [],
+  collection: ["lead_status", "tags"],
+};
+
+export const defaultColumns = (ctx: FieldContext): FieldKey[] => {
+  const visible = fieldsFor(ctx).filter((k) => FIELDS[k].defaultVisible);
+  const lead = LEADING_COLUMNS[ctx].filter((k) => visible.includes(k));
+  const [first, ...rest] = visible;
+  return [first!, ...lead, ...rest.filter((k) => !lead.includes(k))];
+};
 export const defaultExportColumns = (ctx: FieldContext) => fieldsFor(ctx).filter((k) => FIELDS[k].defaultExport);

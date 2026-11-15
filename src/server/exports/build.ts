@@ -201,7 +201,7 @@ function buildSummary(input: BuildInput, rowCount: number, excluded: ExcludedFie
     entries.push(["Export limit", `Only the first ${fmt(input.rowLimit)} rows in the current order were exported.`]);
   }
   entries.push([
-    "Rows",
+    "Rows included",
     input.scope === "page" ? `${SCOPE_LABELS.page} (page ${query.page}, ${query.pageSize} rows per page)` : SCOPE_LABELS[input.scope],
   ]);
   const filters = describeFilters(query.filters, query.search);

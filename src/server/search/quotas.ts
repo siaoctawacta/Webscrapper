@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { ACTIVE_JOB_STATUSES } from "@/lib/domain";
-import { db } from "../db";
+import { db, type DbOrTx } from "../db";
 import { searchJobs } from "../db/schema";
 import { env } from "../env";
 import { HttpError } from "../errors";
@@ -30,9 +30,9 @@ export async function getUserSearchLimits(userId: string): Promise<UserSearchLim
 }
 
 /** Throws HttpError("quota_exceeded") when the user has too many running searches or too many today. */
-export async function assertJobSlots(userId: string, limits: UserSearchLimits, now: Date = new Date()): Promise<void> {
+export async function assertJobSlots(userId: string, limits: UserSearchLimits, now: Date = new Date(), exec: DbOrTx = db()): Promise<void> {
   const since = new Date(now.getTime() - 24 * 3600 * 1000);
-  const [row] = await db()
+  const [row] = await exec
     .select({
       active: sql<number>`count(*) filter (where ${inArray(searchJobs.status, [...ACTIVE_JOB_STATUSES])})::int`,
       today: sql<number>`count(*) filter (where ${gte(searchJobs.createdAt, since)})::int`,
@@ -47,4 +47,22 @@ export async function assertJobSlots(userId: string, limits: UserSearchLimits, n
   if (limits.maxJobsPerDay > 0 && today >= limits.maxJobsPerDay) {
     throw new HttpError("quota_exceeded", dailyLimitMessage(limits.maxJobsPerDay), { limit: "jobs_per_day", max: limits.maxJobsPerDay });
   }
+}
+
+/**
+ * Serialize search creation per user (inside a transaction) so parallel requests cannot all pass the
+ * slot and monthly checks before any of them is inserted.
+ */
+export async function lockUserSearchCreation(tx: DbOrTx, userId: string): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${"search-create:" + userId}))`);
+}
+
+/** Billable requests already reserved by this user's queued/running searches (their estimates). */
+export async function reservedRequests(tx: DbOrTx, userId: string, providers: readonly string[]): Promise<number> {
+  if (!providers.length) return 0;
+  const [row] = await tx
+    .select({ n: sql<number>`coalesce(sum(${searchJobs.estimatedRequests}), 0)::int` })
+    .from(searchJobs)
+    .where(and(eq(searchJobs.userId, userId), inArray(searchJobs.status, [...ACTIVE_JOB_STATUSES]), inArray(searchJobs.provider, [...providers] as never[])));
+  return row?.n ?? 0;
 }

@@ -7,6 +7,8 @@ import { invitations, user } from "../db/schema";
 import { HttpError, notFound } from "../errors";
 import type { InvitationCreateInput } from "./schemas";
 import type { InvitationDto } from "./types";
+import { env } from "../env";
+import { hashToken, newSecretToken } from "../auth/tokens";
 
 type InvitationRow = typeof invitations.$inferSelect;
 
@@ -35,8 +37,9 @@ export async function listInvitations(): Promise<InvitationDto[]> {
 }
 
 /**
- * Invite an email address. The invited person can sign up even when sign-up is closed and is
- * approved automatically with the invited role. Emails are stored lower-case.
+ * Invite an email address. Returns a personal sign-up link carrying a secret token (stored hashed,
+ * shown only now). Whoever signs up with that link AND that email is approved with the invited role,
+ * even when sign-up is closed. The email alone grants nothing. Emails are stored lower-case.
  */
 export async function createInvitation(
   actor: AppUser,
@@ -53,9 +56,10 @@ export async function createInvitation(
     // An accepted invitation whose account was later deleted can be issued again.
     if (existing) await tx.delete(invitations).where(eq(invitations.id, existing.id));
 
+    const token = newSecretToken();
     const [created] = await tx
       .insert(invitations)
-      .values({ email, role: input.role, invitedBy: actor.id })
+      .values({ email, role: input.role, invitedBy: actor.id, tokenHash: hashToken(token) })
       .onConflictDoNothing({ target: invitations.email })
       .returning();
     if (!created) throw new HttpError("conflict", "This email has already been invited.");
@@ -71,7 +75,10 @@ export async function createInvitation(
       },
       tx,
     );
-    return toDto(created, { id: actor.id, name: actor.name, email: actor.email });
+    const inviteUrl = new URL("/sign-up", env().APP_URL);
+    inviteUrl.searchParams.set("invite", token);
+    inviteUrl.searchParams.set("email", email);
+    return { ...toDto(created, { id: actor.id, name: actor.name, email: actor.email }), inviteUrl: inviteUrl.toString() };
   });
 }
 

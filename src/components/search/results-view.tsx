@@ -113,9 +113,6 @@ export function ResultsView({ jobId }: { jobId: string }) {
     enabled: Boolean(job.data) && !job.data?.resultsPurged,
   });
 
-  // A new filter/search/sort means a new result set: start the selection over.
-  const filterKey = JSON.stringify([query.filters, query.search, query.sort]);
-  React.useEffect(() => setSelection(emptySelection()), [filterKey]);
 
   // Refresh the counts on the tabs when the job finishes.
   const status = job.data?.status;

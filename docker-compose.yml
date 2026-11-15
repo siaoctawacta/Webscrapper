@@ -1,6 +1,8 @@
-# Local/production-like stack: Postgres + migrations + web + worker.
-#   cp .env.example .env   # fill in secrets
+# Production-like stack: Caddy (HTTPS + trustworthy client IPs) → web, plus worker, Postgres, migrations.
+#   cp .env.example .env   # fill in secrets; set DOMAIN to your domain for automatic HTTPS
 #   docker compose up --build
+# The web app is NOT published directly: Caddy replaces any client-supplied X-Forwarded-For, which
+# the app relies on for per-IP rate limits and audit logs.
 services:
   db:
     image: postgres:16-alpine
@@ -30,10 +32,18 @@ services:
     environment:
       DATABASE_URL: postgres://leadfinder:leadfinder@db:5432/leadfinder
       EXPORT_STORAGE_DIR: /app/storage/exports
-    ports: ["3000:3000"]
+    expose: ["3000"]
     volumes: [exports:/app/storage/exports]
     depends_on:
       migrate: { condition: service_completed_successfully }
+
+  proxy:
+    image: caddy:2-alpine
+    # DOMAIN=leads.example.com gives automatic HTTPS; the default ":80" serves plain HTTP locally.
+    command: ["caddy", "reverse-proxy", "--from", "${DOMAIN:-:80}", "--to", "web:3000"]
+    ports: ["80:80", "443:443"]
+    volumes: [caddy:/data]
+    depends_on: [web]
 
   worker:
     build: .
@@ -49,3 +59,4 @@ services:
 volumes:
   pgdata:
   exports:
+  caddy:

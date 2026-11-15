@@ -310,3 +310,43 @@ All JSON. Errors: `{ error: { code, message, details? } }` (see `src/lib/api-typ
   users from `tests/helpers/auth.ts`; ownership (other user → 404), validation (422), quotas.
 - E2E (Playwright, sample mode): sign up → search → sort/filter → select → save to collection → bulk
   → proposal → concept → export → download.
+
+## 8. Implementation notes (as built)
+
+Differences from the plan above, and details worth knowing:
+
+- **Worker runtime**: `pnpm worker` runs `tsx --tsconfig tsconfig.worker.json`, which maps the
+  `server-only` marker to an empty shim (the worker is a plain Node process, not an RSC bundle).
+- **Queue options**: `enqueue()` only forwards options that are set — pg-boss rejects keys that are
+  present but `undefined`.
+- **Exports**: `POST /exports` generates up to 2,000 rows inline (201, `status: ready`, includes
+  `downloadUrl`) and queues larger exports (202). `GET /exports/{id}` mints a new download token on
+  every call (the previous link stops working). `excludedFields[]` entries also carry `rows`.
+- **Search**: `search.run` jobs get `expireInSeconds: 6h`. Job events are stored in `job_events`
+  but not exposed over the API; the UI uses `stopReason`/`error`. Limits set to `0` mean unlimited.
+- **Proposals** store the place they were written for (`source`, `source_record_id`) so history can
+  be shown for search results that were never saved; `business_name` is stored only when the source
+  policy allows it (never for Google).
+- **Concepts** input uses `primaryColor` (not `colors`), plus optional `businessType`, `sections`
+  and `useAi`. Contact details shown in a concept are the ones the user confirmed in the form —
+  generation never reads provider fields directly.
+- **Collections**: hydration lists every restricted field it loaded live in `liveFields` (even when
+  empty) so the grid can tell "not stored" from "truly missing". At most 100 rows are hydrated per
+  request; exports never hydrate.
+- **Phones** are displayed in international format whenever the number is valid for its country.
+- **Sample mode** never touches the network (websites and emails use the reserved `.example`
+  TLD) and a Google place link returns the nearest fictional business of the suggested kind — real
+  business names are never attached to generated data.
+- **Tests**: `pnpm test` (Vitest, ~1,100 tests, real Postgres test DB) and `pnpm test:e2e`
+  (Playwright against `next start` + worker in sample mode; run `pnpm build` first). Headless
+  Chromium reports every download as "download", so the e2e checks the file name from the
+  `Content-Disposition` header instead.
+- **Account security** (after an independent security review): there is no email verification, so
+  no email address grants anything by itself. The first admin account needs `SETUP_TOKEN` in
+  production (`/sign-up?setup=…`); invitations carry a secret single-use link token (stored hashed,
+  sent as the `x-invite-token` header by the sign-up form) that must match the invited email;
+  sign-in attempts are limited per account (10 / 15 min) as well as per IP. Client IPs come from
+  `CLIENT_IP_HEADER` (default X-Forwarded-For, right-most untrusted hop) — run behind a proxy that
+  overwrites it (Caddy in docker-compose). Search creation re-checks quotas under a per-user
+  advisory lock and counts queued/running estimates; disabling an account cancels its searches.
+  Live Google lookups in collections stop at the user's monthly request limit.

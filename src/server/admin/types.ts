@@ -38,6 +38,8 @@ export type InvitationDto = {
   invitedBy: { id: string; name: string; email: string } | null;
   createdAt: string;
   acceptedAt: string | null;
+  /** Personal sign-up link with the secret token. Returned ONLY when the invitation is created. */
+  inviteUrl?: string;
 };
 
 export type InvitationsResponse = { invitations: InvitationDto[]; signupMode: SignupMode };

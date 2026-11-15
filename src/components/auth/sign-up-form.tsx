@@ -14,17 +14,33 @@ import type { SignupMode } from "@/server/admin/types";
 import { PasswordInput } from "./password-input";
 import { MIN_PASSWORD_LENGTH, readUserStatus, signUpErrorMessage } from "./auth-messages";
 
+// Same names as src/server/auth/tokens.ts (kept here so this client file imports no server code).
+const INVITE_TOKEN_HEADER = "x-invite-token";
+const SETUP_TOKEN_HEADER = "x-setup-token";
+
 type Errors = Partial<Record<"name" | "email" | "password" | "form", string>>;
 
 const MODE_NOTICE: Record<Exclude<SignupMode, "approval">, string> = {
-  invite: "Sign-up is by invitation only. If an administrator invited you, use the email address they invited.",
+  invite: "Sign-up is by invitation only. Open the personal invite link your administrator sent you.",
   closed: "New sign-ups are closed. If an administrator invited you, you can still create your account with that email address.",
 };
 
-export function SignUpForm({ signupMode }: { signupMode: SignupMode }) {
+export function SignUpForm({
+  signupMode,
+  inviteToken,
+  setupToken,
+  invitedEmail,
+}: {
+  signupMode: SignupMode;
+  /** From a personal invite link (/sign-up?invite=…&email=…). */
+  inviteToken?: string;
+  /** From the first-admin setup link (/sign-up?setup=…). */
+  setupToken?: string;
+  invitedEmail?: string;
+}) {
   const router = useRouter();
   const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
+  const [email, setEmail] = React.useState(invitedEmail ?? "");
   const [password, setPassword] = React.useState("");
   const [errors, setErrors] = React.useState<Errors>({});
   const [pending, setPending] = React.useState(false);
@@ -50,7 +66,10 @@ export function SignUpForm({ signupMode }: { signupMode: SignupMode }) {
     if (Object.keys(v).length) return;
     setPending(true);
     try {
-      const { data, error } = await authClient.signUp.email({ name: name.trim(), email: email.trim(), password });
+      const headers: Record<string, string> = {};
+      if (inviteToken) headers[INVITE_TOKEN_HEADER] = inviteToken;
+      if (setupToken) headers[SETUP_TOKEN_HEADER] = setupToken;
+      const { data, error } = await authClient.signUp.email({ name: name.trim(), email: email.trim(), password }, { headers });
       if (error || !data) {
         setErrors({ form: signUpErrorMessage(error) });
         return;

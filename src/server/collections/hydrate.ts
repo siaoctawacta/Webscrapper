@@ -1,4 +1,6 @@
 import "server-only";
+import { billableRequestsThisMonth } from "../usage";
+import { getUserSearchLimits } from "../search/quotas";
 import type { BusinessRow } from "@/lib/api-types";
 import type { SourceId } from "@/lib/domain";
 import { PAGE_SIZES } from "@/lib/list-query";
@@ -28,7 +30,20 @@ export type HydrateDeps = {
   maxRows?: number;
   /** Override LIVE_DETAILS_TIMEOUT_MS (tests). */
   timeoutMs?: number;
+  /**
+   * Billable provider requests the user may still make this month (null = unlimited). Live lookups
+   * are billed, so they count against the same monthly limit as searches. Default reads the DB.
+   */
+  remainingAllowance?: (user: AppUser) => Promise<number | null>;
+  /** Called when some or all rows could not be loaded live because the monthly limit is reached. */
+  onLimited?: () => void;
 };
+
+async function defaultRemainingAllowance(user: AppUser): Promise<number | null> {
+  const { monthlyRequestLimit } = await getUserSearchLimits(user.id);
+  if (!monthlyRequestLimit) return null;
+  return Math.max(0, monthlyRequestLimit - (await billableRequestsThisMonth(user.id)));
+}
 
 const warnedNotConfigured = new Set<SourceId>();
 
@@ -99,7 +114,15 @@ async function hydrate(user: AppUser, rows: BusinessRow[], deps: HydrateDeps): P
       );
     };
 
-    const ids = [...new Set(indexes.map((i) => rows[i]!.sourceRecordId))];
+    let ids = [...new Set(indexes.map((i) => rows[i]!.sourceRecordId))];
+    if (!provider.isSample) {
+      const remaining = await (deps.remainingAllowance ?? defaultRemainingAllowance)(user);
+      if (remaining !== null && remaining < ids.length) {
+        deps.onLimited?.();
+        ids = ids.slice(0, remaining);
+        if (!ids.length) continue;
+      }
+    }
     const signal = AbortSignal.timeout(deps.timeoutMs ?? LIVE_DETAILS_TIMEOUT_MS);
     let live: Map<string, ProviderPlace>;
     try {

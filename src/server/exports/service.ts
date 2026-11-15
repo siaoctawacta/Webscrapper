@@ -22,6 +22,8 @@ import {
   toExportDto,
   type ExportDeps,
 } from "./shared";
+import { isFieldKey } from "@/lib/fields";
+import { canExport } from "../providers/policy";
 import { openExportFile } from "./storage";
 import { mintDownloadToken, tokenMatches } from "./tokens";
 
@@ -226,6 +228,28 @@ export async function listExports(user: AppUser, deps: Pick<ExportDeps, "now"> =
   return rows.map((r) => toExportDto(r, now));
 }
 
+export const POLICY_CHANGED_MESSAGE =
+  "The data source's terms no longer allow some columns in this file. Please create the export again.";
+
+/**
+ * Source policy re-check at download: a search export's rows all come from the job's provider, so
+ * every column that is not exportable for that provider today must have been withheld in the file.
+ * (Files are also deleted after 24 hours, which bounds the window for collection exports.)
+ */
+async function assertPolicyStillAllows(rec: ExportRecord): Promise<void> {
+  if (rec.target !== "search" || !rec.jobId || !rec.rowCount) return;
+  const [job] = await db()
+    .select({ provider: searchJobs.provider })
+    .from(searchJobs)
+    .where(and(eq(searchJobs.id, rec.jobId), eq(searchJobs.userId, rec.userId)))
+    .limit(1);
+  if (!job) return;
+  const withheld = new Set(rec.excludedFields.map((e) => e.field));
+  if (rec.columns.some((c) => isFieldKey(c) && !canExport(job.provider, c) && !withheld.has(c))) {
+    throw new HttpError("conflict", POLICY_CHANGED_MESSAGE);
+  }
+}
+
 /**
  * GET /api/v1/exports/{id}/download?token=… — owner only (others get 404), valid unexpired token
  * (403), file not expired (404). Streams the file and audits "export.download".
@@ -250,6 +274,7 @@ export async function openDownload(
     throw new HttpError("forbidden", LINK_EXPIRED_MESSAGE);
   }
   if (status !== "ready" || !rec.storageKey || !rec.fileName) throw new HttpError("not_found", FILE_EXPIRED_MESSAGE);
+  await assertPolicyStillAllows(rec);
 
   const file = await openExportFile(rec.storageKey);
   if (!file) throw new HttpError("not_found", FILE_EXPIRED_MESSAGE);

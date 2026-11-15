@@ -19,7 +19,7 @@ Built for web designers and agencies prospecting local businesses — English an
 | **Proposals** | One click writes a personal email or WhatsApp message (English or French) for: new website, website redesign, local Google ranking, social media, branding, or your own service — using only facts we actually know. Optional "Polish with AI". Open in your email app or WhatsApp, or copy. |
 | **AI homepage concepts** | For a business without a website: enter its services and style preferences, and the AI drafts a homepage (copy, sections, colours). Preview desktop/mobile, edit the copy, download the HTML, or share a private link with the prospect. |
 | **Export** | XLSX (sheets: Business Data, Search Summary, Data Quality) or UTF-8 CSV. Selected rows, current page, or all filtered rows; your columns and sort order. Phone numbers keep their `+` and leading zeros; cells are protected against spreadsheet formula injection; download links expire after 15 minutes. |
-| **Access control** | Email + password sign-in. The first account becomes the admin. Everyone else waits for approval (or is invited). Admins approve/disable people, set per-person limits, and see usage, estimated cost and an audit log. |
+| **Access control** | Email + password sign-in. The first account becomes the admin (in production it needs the server's `SETUP_TOKEN`). Everyone else waits for approval, or joins through a personal invite link. Admins approve/disable people, set per-person limits, and see usage, estimated cost and an audit log. |
 
 ## Data sources and what is stored (please read)
 
@@ -41,6 +41,8 @@ If you hold a different agreement with Google or switch to a licensed data provi
 - [x] Emails only when published by the business itself; never inferred; status "source-provided", never "verified".
 - [x] AI only through allowlisted backend functions with schema-validated output; business/website text is treated as untrusted data; daily AI limits per user.
 - [x] Keys server-side only; per-user ownership checks on every endpoint; audit log of searches, saves, exports, downloads and admin actions.
+- [x] No email address alone grants access: the first admin needs `SETUP_TOKEN`, invitations need their secret link; sign-in attempts are limited per account.
+- [x] Live Google lookups in collections count against each person's monthly request limit.
 - [ ] **Your part:** review local privacy and marketing laws (e.g. Togo's 2019 personal data law, Ghana's Data Protection Act 2012, GDPR for EU contacts) before contacting people, and honour opt-outs.
 
 ## Quick start (local)
@@ -69,7 +71,7 @@ pnpm dev
 pnpm worker
 ```
 
-Open http://localhost:3000 and sign up — the first account becomes the admin.
+Open http://localhost:3000 and sign up — the first account becomes the admin. (In production, set `SETUP_TOKEN` and create the first account at `/sign-up?setup=<SETUP_TOKEN>`.)
 
 ### Turning on real data (Google Places API)
 
@@ -92,7 +94,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-This starts Postgres, runs migrations, then the web app on port 3000 and the worker.
+This starts Postgres, runs migrations, then the web app and the worker behind a Caddy reverse proxy on ports 80/443 (set `DOMAIN` in `.env` for automatic HTTPS). Create the first admin at `/sign-up?setup=<SETUP_TOKEN>`.
 
 ## Configuration
 
@@ -109,7 +111,7 @@ pnpm test
 ```
 
 ```bash
-pnpm test:e2e
+pnpm build && pnpm test:e2e
 ```
 
 ```bash
@@ -124,12 +126,16 @@ Tests use a separate Postgres database (`leadfinder_test`) that is recreated on 
 - [ ] `APP_URL` = your public https URL; `BETTER_AUTH_SECRET` = strong random secret.
 - [ ] Run `pnpm db:migrate` on each release before starting new web/worker processes.
 - [ ] Run at least one `pnpm worker` process next to the web app; give both the same `EXPORT_STORAGE_DIR` (shared volume) or one host.
-- [ ] `SIGNUP_MODE=invite` or `approval`; `ADMIN_EMAILS` set to your email.
+- [ ] `SETUP_TOKEN` set; create your admin account at `/sign-up?setup=<SETUP_TOKEN>` right after deploying.
+- [ ] `SIGNUP_MODE=invite` or `approval`. Invite people from Admin → Invitations and send them their personal link.
+- [ ] Run behind a reverse proxy that overwrites `X-Forwarded-For` (the bundled Caddy does), or set `CLIENT_IP_HEADER` to your platform's client-IP header.
 - [ ] Google key restricted by API and IP; billing alerts and quotas configured in Google Cloud.
 - [ ] HTTPS in front of the app (cookies are `Secure` automatically when `APP_URL` is https).
 - [ ] Log shipping and uptime monitoring for both processes.
 
 ## Limitations
+
+- **Not yet verified against the live Google Places API or AI Gateway.** Both integrations follow the official documentation and are covered by tests with recorded/mock responses, but this build was developed without network access to Google or the AI Gateway. Run one small search (20 results) after adding your key and check the results before running large ones.
 
 - Google returns at most ~60 results per query; very large targets rely on map tiling, and the real number depends on how many businesses Google lists in the area.
 - Saved Google leads show names/phones only while the Google key works (they're loaded live); sorting/filtering by those fields inside collections only works for sources that allow storage.

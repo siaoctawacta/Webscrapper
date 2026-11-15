@@ -131,4 +131,6 @@ export const STOP_MESSAGES = {
   noArea: () => "This search has no map area to look in. Start it again from a Google Maps link or a typed location.",
   unexpected: () => "Something went wrong while running this search. Please try again.",
   workerStopped: () => "The worker stopped unexpectedly. Results found so far are kept — start the search again to get more.",
+  providerUnavailable: () =>
+    "Google Maps isn't set up on this server any more (the API key was removed), so this search couldn't run. Ask an administrator, or search again with sample data.",
 } as const;
