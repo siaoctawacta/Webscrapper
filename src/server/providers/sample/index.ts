@@ -196,8 +196,10 @@ function findPlaceNear(name: string, center: LatLng, now: Date): ProviderPlace |
   };
 
   if (preferredKnown) {
+    // Same name nearby, else the nearest fictional business of the kind the name suggests (a hotel
+    // link gives a hotel). The real name is never attached to generated data.
     const own = bestAmong([preferred]);
-    if (own && own.sim >= SAME_NAME) return own.p;
+    if (own) return own.p;
   }
   const any = bestAmong(preferredKnown ? CATEGORIES : [preferred, ...CATEGORIES]);
   return any?.p ?? null;
